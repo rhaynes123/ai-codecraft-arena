@@ -42,12 +42,13 @@ export function AppHeader() {
   const linkCls = "text-sm text-muted-foreground hover:text-foreground transition-colors";
   return (
     <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-4">
+      <div className="mx-auto flex min-h-14 max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2">
         <Logo />
-        <nav className="flex items-center gap-5">
-          <Link to="/challenges" className={linkCls} activeProps={{ className: "text-foreground" }}>Challenges</Link>
-          {user && <Link to="/dashboard" className={linkCls} activeProps={{ className: "text-foreground" }}>Dashboard</Link>}
-          {user && <Link to="/jobs" className={linkCls} activeProps={{ className: "text-foreground" }}>Jobs</Link>}
+        <nav aria-label="Main navigation" className="order-3 flex w-full flex-wrap items-center gap-1 sm:order-none sm:w-auto">
+          <Button asChild variant="ghost" size="sm"><Link to="/challenges" className={linkCls} activeProps={{ className: "text-foreground" }}>Challenges</Link></Button>
+          <Button asChild variant="ghost" size="sm"><Link to="/training" className={linkCls} activeProps={{ className: "text-foreground" }}>Training</Link></Button>
+          {user && <Button asChild variant="ghost" size="sm"><Link to="/dashboard" className={linkCls} activeProps={{ className: "text-foreground" }}>Dashboard</Link></Button>}
+          {user && <Button asChild variant="ghost" size="sm"><Link to="/jobs" className={linkCls} activeProps={{ className: "text-foreground" }}>Jobs</Link></Button>}
         </nav>
         <div className="ml-auto flex items-center gap-3">
           {ready && user ? (
