@@ -1,35 +1,39 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ExternalLink, Lock, MapPin } from "lucide-react";
+import { ExternalLink, Lock, MapPin, RotateCw } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { summarizeReports, useMyReports } from "@/lib/queries";
 import { DIMENSIONS, LEVELS, formatSalary, jobAccess, jobMatch, type Scores } from "@/lib/scoring";
+import type { LiveJob } from "@/lib/job-feed";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/jobs")({
   head: () => ({
     meta: [
       { title: "Job matches — Steer" },
-      { name: "description", content: "Job openings matched to your AI-assisted engineering level and strengths." },
+      { name: "description", content: "Live engineering openings matched to your AI-assisted engineering level and strengths." },
       { property: "og:title", content: "Job matches — Steer" },
-      { property: "og:description", content: "Roles and salaries that unlock as your level grows." },
+      { property: "og:description", content: "Real roles and salaries that unlock as your level grows." },
     ],
   }),
   component: Jobs,
 });
 
+async function fetchLiveJobs(): Promise<LiveJob[]> {
+  const res = await fetch("/api/public/jobs?limit=150");
+  if (!res.ok) throw new Error(`Job feed request failed (${res.status})`);
+  const body = await res.json();
+  return (body.jobs ?? []) as LiveJob[];
+}
+
 function Jobs() {
   const reports = useMyReports();
-  const jobs = useQuery({
-    queryKey: ["jobs"],
-    queryFn: async () => (await supabase.from("jobs").select("*").order("level").order("salary_max", { ascending: false })).data ?? [],
-  });
+  const jobs = useQuery({ queryKey: ["live-jobs"], queryFn: fetchLiveJobs, staleTime: 60_000 });
   const [role, setRole] = useState("all");
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [minSalary, setMinSalary] = useState(0);
@@ -37,7 +41,10 @@ function Jobs() {
   const sum = summarizeReports(reports.data ?? []);
   const userLevel = sum.ranked ? sum.level.level : 1;
   const filtered = (jobs.data ?? []).filter(
-    (j) => (role === "all" || j.role_type === role) && (!remoteOnly || j.remote) && j.salary_max >= minSalary,
+    (j) =>
+      (role === "all" || j.role_type === role) &&
+      (!remoteOnly || j.remote) &&
+      (!minSalary || (j.salary_max || j.salary_min) >= minSalary),
   );
   const chip = (a: boolean) => cn("rounded-sm border px-2.5 py-1 font-mono text-xs", a ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent");
 
@@ -64,6 +71,27 @@ function Jobs() {
           <div className="ml-auto flex items-center gap-2"><Switch id="remote" checked={remoteOnly} onCheckedChange={setRemoteOnly} /><Label htmlFor="remote" className="text-sm">Remote only</Label></div>
         </div>
 
+        {jobs.isLoading && (
+          <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-56 animate-pulse rounded-lg border bg-card" />)}
+          </div>
+        )}
+
+        {jobs.isError && (
+          <div className="mt-8 rounded-lg border border-destructive/40 bg-card p-6 text-center">
+            <p className="text-sm">The job feeds didn't answer. Nothing was lost — your level and history are untouched.</p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={() => jobs.refetch()}>
+              <RotateCw className="mr-1 h-3 w-3" /> Try again
+            </Button>
+          </div>
+        )}
+
+        {!jobs.isLoading && !jobs.isError && !filtered.length && (
+          <p className="mt-8 rounded-lg border bg-card p-6 text-center text-sm text-muted-foreground">
+            No live openings match these filters right now. Try widening the role or salary.
+          </p>
+        )}
+
         {[5, 4, 3, 2, 1].map((lvl) => {
           const group = filtered.filter((j) => j.level === lvl);
           if (!group.length) return null;
@@ -82,15 +110,18 @@ function Jobs() {
             </section>
           );
         })}
-        <p className="mt-10 text-center text-xs text-muted-foreground">Listings shown are sample roles for demonstration.</p>
+        <p className="mt-10 text-center text-xs text-muted-foreground">
+          Live openings pulled from Remote OK, Remotive and the current Hacker News "Who is hiring" thread. Each card links to the original posting.
+        </p>
       </main>
     </div>
   );
 }
 
-function JobCard({ job, access, mine }: { job: any; access: string; mine: Scores | null }) {
+function JobCard({ job, access, mine }: { job: LiveJob; access: string; mine: Scores | null }) {
   const locked = access === "locked";
   const match = jobMatch(job.required, mine);
+  const salary = job.salary_min ? formatSalary(job.salary_min, job.salary_max || job.salary_min) : "Salary not listed";
   return (
     <div className={cn("relative rounded-lg border bg-card p-5", locked && "opacity-55")}>
       <div className="flex items-start justify-between gap-2">
@@ -103,8 +134,9 @@ function JobCard({ job, access, mine }: { job: any; access: string; mine: Scores
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{job.location}</span>
         <Badge variant="secondary" className="font-mono text-[10px]">{job.role_type}</Badge>
+        <Badge variant="outline" className="font-mono text-[10px]">{job.source}</Badge>
       </div>
-      <p className="mt-3 font-mono text-lg font-bold">{formatSalary(job.salary_min, job.salary_max)}</p>
+      <p className="mt-3 font-mono text-lg font-bold">{salary}</p>
       <p className="mt-2 text-sm text-muted-foreground">{job.description}</p>
       <div className="mt-3 flex flex-wrap gap-1.5">
         {Object.entries(job.required as Record<string, number>).map(([k, v]) => {
@@ -117,7 +149,7 @@ function JobCard({ job, access, mine }: { job: any; access: string; mine: Scores
         <Button asChild variant="outline" size="sm" className="mt-4 w-full"><Link to="/challenges">Level up to unlock</Link></Button>
       ) : (
         <Button asChild size="sm" variant={access === "open" ? "default" : "outline"} className="mt-4 w-full">
-          <a href={job.url} target="_blank" rel="noreferrer">View role <ExternalLink className="ml-1 h-3 w-3" /></a>
+          <a href={job.url} target="_blank" rel="noreferrer noopener">View role <ExternalLink className="ml-1 h-3 w-3" /></a>
         </Button>
       )}
     </div>
