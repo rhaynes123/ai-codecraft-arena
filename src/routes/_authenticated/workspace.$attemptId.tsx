@@ -68,6 +68,7 @@ function Workspace() {
   const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [scoring, setScoring] = useState(false);
+  const msgsRef = useRef<Msg[]>([]);
   const editTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -112,9 +113,7 @@ function Workspace() {
   async function send(override?: string, depth = 0) {
     const text = (override ?? input).trim();
     if (!text || (streaming && !override)) return;
-    const next: Msg[] = [...msgs, { role: "user", content: text }];
-    if (override) msgsRef.current = next;
-    const base = override ? [...msgsRef.current] : next;
+    const base: Msg[] = [...(override ? msgsRef.current : msgs), { role: "user", content: text }];
     setMsgs([...base, { role: "assistant", content: "" }]); if (!override) setInput(""); setStreaming(true);
     log("prompt", { text: text.slice(0, 2000), chars: text.length, contextFiles: attached, contextChars: ctxChars, auto: !!override });
     let acc = "";
@@ -204,7 +203,7 @@ function Workspace() {
         <div className="ml-auto flex items-center gap-2">
           <span className="font-mono text-xs text-muted-foreground">{profile.data?.credits ?? "—"} credits</span>
           <Button size="sm" variant="outline" onClick={useHint} disabled={hints >= ch.hints.length}><Lightbulb className="mr-1 h-3.5 w-3.5" />Hint ({hints}/{ch.hints.length})</Button>
-          <Button size="sm" variant="secondary" onClick={runVisible} disabled={busy}><Play className="mr-1 h-3.5 w-3.5" />Run tests</Button>
+          <Button size="sm" variant="secondary" onClick={() => runVisible()} disabled={busy}><Play className="mr-1 h-3.5 w-3.5" />Run tests</Button>
           <Button size="sm" onClick={() => setConfirmOpen(true)} disabled={busy}>Submit</Button>
         </div>
       </header>
@@ -216,7 +215,7 @@ function Workspace() {
               {!msgs.length && <p className="text-sm text-muted-foreground">Ask the AI to explain code, draft a fix, or debug a failing test. Attach files with the clip icon. You're scored on how you verify and steer its output.</p>}
               {msgs.map((m, i) => (
                 <div key={i} className={cn("text-sm", m.role === "user" && "rounded-md bg-secondary p-2.5")}>
-                  {m.role === "assistant" ? <AssistantMessage text={m.content} idx={i} decided={decided} onDecide={decide} /> : <p className="whitespace-pre-wrap">{m.content}</p>}
+                  {m.role === "user" && m.content.startsWith("[test results]") ? <pre className="whitespace-pre-wrap font-mono text-[11px] text-muted-foreground">{m.content}</pre> : m.role === "assistant" ? <AssistantMessage text={m.content} idx={i} decided={decided} onDecide={decide} /> : <p className="whitespace-pre-wrap">{m.content}</p>}
                 </div>
               ))}
               {streaming && <p className="font-mono text-xs text-primary">thinking…</p>}
@@ -226,7 +225,7 @@ function Workspace() {
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
               <div className="mt-2 flex items-center justify-between">
                 <span className="font-mono text-[11px] text-muted-foreground">{input ? `costs ${cost} credit${cost > 1 ? "s" : ""}` : "Enter to send · Shift+Enter for new line"}</span>
-                <Button size="sm" onClick={send} disabled={streaming || !input.trim()}><Send className="h-3.5 w-3.5" /></Button>
+                <Button size="sm" onClick={() => send()} disabled={streaming || !input.trim()}><Send className="h-3.5 w-3.5" /></Button>
               </div>
             </div>
           </div>
@@ -300,7 +299,7 @@ function Workspace() {
 }
 
 function AssistantMessage({ text, idx, decided, onDecide }: { text: string; idx: number; decided: Record<string, string>; onDecide: (k: string, p: string, c: string, a: boolean) => void }) {
-  const parts = text.split(/(```[a-zA-Z]*\s+path=[^\s`]+\n[\s\S]*?```)/g);
+  const parts = text.replace(/\[\[run-tests\]\]/g, "▶ running tests…").split(/(```[a-zA-Z]*\s+path=[^\s`]+\n[\s\S]*?```)/g);
   return (
     <div className="space-y-2">
       {parts.map((p, j) => {
