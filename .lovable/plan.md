@@ -48,6 +48,16 @@ At submit, scores 0–100 on:
 - Correctness & Code Quality — hidden + visible pass rate plus AI review of final code readability
 Deterministic metrics from the event log combine with an AI judge pass that reads the transcript and returns structured scores, evidence, and coaching tips.
 
+## Engineer level and job recommendations
+- Overall score (weighted average of recent submissions, harder challenges weigh more) maps to a level: L1 Junior, L2 Mid, L3 Senior, L4 Staff, L5 Principal. Level shown on dashboard with progress bar to the next level.
+- New `/jobs` page lists job openings matched to the user's level: their current level plus "stretch" roles one level up (locked roles above that show what score unlocks them).
+- Each job card: title, company, location/remote, level, salary range, required strengths (e.g. "Verification Rigor 70+"), and a match % based on the user's radar.
+- Salary ranges grow with level (e.g. L1 ~$80–110k up to L5 ~$280–400k+).
+- Filters: level, remote, salary min, role type (backend, frontend, full-stack, platform).
+- Report page and dashboard show a "New roles unlocked" callout when a submission raises the user's level.
+- v1 uses a curated, seeded list of sample job listings (clearly labeled as sample); applying opens an external link. Connecting a real job board feed can come later.
+
+
 ## Credits
 - New users get 200 credits; each AI chat message costs credits based on size (shown before sending). Balance and ledger on dashboard.
 - Purchasing more credits is out of scope for v1 (can add payments later); a daily free top-up keeps practice going.
