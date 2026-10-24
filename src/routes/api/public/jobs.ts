@@ -41,18 +41,23 @@ async function latestHiringThread(): Promise<string | null> {
 
 async function loadJobs(): Promise<LiveJob[]> {
   const threadId = await latestHiringThread();
-  const [remoteok, remotive, hn] = await Promise.all([
+  const hnSearch = (q: string) =>
+    threadId
+      ? fetchJson(`https://hn.algolia.com/api/v1/search?${q}tags=comment,story_${threadId}&hitsPerPage=100`)
+      : Promise.resolve(null);
+  const [remoteok, remotive, hn, hnDetroit, hnMichigan] = await Promise.all([
     fetchJson("https://remoteok.com/api"),
     fetchJson("https://remotive.com/api/remote-jobs?category=software-dev&limit=100"),
-    threadId
-      ? fetchJson(`https://hn.algolia.com/api/v1/search?tags=comment,story_${threadId}&hitsPerPage=100`)
-      : Promise.resolve(null),
+    hnSearch(""),
+    // The newest 100 comments rarely include local roles, so ask for them by name.
+    hnSearch("query=detroit&"),
+    hnSearch("query=michigan&"),
   ]);
 
   const listings = [
     ...(Array.isArray(remoteok) ? remoteok.map(normalizeRemoteok) : []),
     ...(Array.isArray(remotive?.jobs) ? remotive.jobs.map(normalizeRemotive) : []),
-    ...(Array.isArray(hn?.hits) ? hn.hits.map(normalizeHn) : []),
+    ...[hn, hnDetroit, hnMichigan].flatMap((r) => (Array.isArray(r?.hits) ? r.hits.map(normalizeHn) : [])),
   ].filter(Boolean) as LiveJob[];
 
   return dedupeJobs(listings);
@@ -77,6 +82,7 @@ const querySchema = z.object({
   role: z.enum(["all", "frontend", "backend", "full-stack", "platform"]).default("all"),
   remote: z.enum(["true", "false"]).default("false"),
   minSalary: z.coerce.number().int().min(0).max(500000).default(0),
+  region: z.enum(["all", "detroit"]).default("all"),
   limit: z.coerce.number().int().min(1).max(150).default(120),
 });
 
@@ -87,13 +93,14 @@ export const Route = createFileRoute("/api/public/jobs")({
         const parsed = querySchema.safeParse(Object.fromEntries(new URL(request.url).searchParams));
         if (!parsed.success) return Response.json({ error: "Invalid query" }, { status: 400 });
 
-        const { role, remote, minSalary, limit } = parsed.data;
+        const { role, remote, minSalary, region, limit } = parsed.data;
         const jobs = await getJobs();
         const filtered = jobs
           .filter(
             (j) =>
               (role === "all" || j.role_type === role) &&
-              (!remote || j.remote) &&
+              (remote === "false" || j.remote) &&
+              (region === "all" || j.local) &&
               (!minSalary || (j.salary_max || j.salary_min) >= minSalary),
           )
           .slice(0, limit);
@@ -103,6 +110,7 @@ export const Route = createFileRoute("/api/public/jobs")({
           total: jobs.length,
           fetchedAt: cache?.at ?? null,
           sources: ["Remote OK", "Remotive", "Hacker News Who is hiring"],
+          local: jobs.filter((j) => j.local).length,
         });
       },
     },
