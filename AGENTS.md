@@ -14,3 +14,7 @@
 - Live openings come from public feeds (Remote OK, Remotive, Hacker News "Who is hiring")
   through `/api/public/jobs`. Keep the normalizers in `src/lib/job-feed.ts` pure and
   network-free so they stay unit-testable; the route owns fetching and caching.
+
+## Training directory
+
+- Keep training-provider records in a browser-safe data module with official source URLs and verification dates; the public directory filters those records without implying current cohort availability or a provider partnership.
