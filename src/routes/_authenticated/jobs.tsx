@@ -68,7 +68,9 @@ function Jobs() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
-          {["all", "frontend", "backend", "full-stack", "platform"].map((r) => <button key={r} className={chip(role === r)} onClick={() => setRole(r)}>{r}</button>)}
+          {["all", "frontend", "backend", "full-stack", "platform"].map((r) => (
+            <button key={r} className={cn(chip(role === r), !(counts[r] ?? 0) && "opacity-40")} onClick={() => setRole(r)}>{r} · {counts[r] ?? 0}</button>
+          ))}
           <span className="mx-2 h-5 w-px bg-border" />
           {[0, 120000, 180000, 250000].map((s) => <button key={s} className={chip(minSalary === s)} onClick={() => setMinSalary(s)}>{s ? `$${s / 1000}k+` : "any salary"}</button>)}
           <div className="ml-auto flex items-center gap-2"><Switch id="remote" checked={remoteOnly} onCheckedChange={setRemoteOnly} /><Label htmlFor="remote" className="text-sm">Remote only</Label></div>
