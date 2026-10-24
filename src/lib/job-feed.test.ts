@@ -168,3 +168,24 @@ describe("fixMojibake", () => {
     expect(job?.company).toBe("Sotheby\u2019s");
   });
 });
+
+describe("parseHnPosting cleanup", () => {
+  it("keeps the company site out of the company name and the blurb", () => {
+    const parsed = parseHnPosting(
+      "Sendery ( https://sendery.co) | iOS Engineer | Remote | Full-time | Build our app. More at https://sendery.co/careers",
+    );
+    expect(parsed?.company).toBe("Sendery");
+    expect(parsed?.location).toBe("Remote");
+    expect(parsed?.remote).toBe(true);
+    expect(parsed?.description).not.toMatch(/https?:\/\//);
+    expect(parsed?.url).toBe("https://sendery.co/careers");
+  });
+
+  it("falls back when the location field holds a whole paragraph", () => {
+    const parsed = parseHnPosting(
+      "Oscilar.com | Sr/Staff Software Engineers, Data Scientist, FDE, PM | REMOTE (US/Canada/Brazil/Poland/UK/India) Full-time AI Risk Decisioning platform that helps organizations manage risk | Full-time | We build things",
+    );
+    expect(parsed?.location).toBe("See posting");
+    expect(parsed?.description).toBe("We build things");
+  });
+});
