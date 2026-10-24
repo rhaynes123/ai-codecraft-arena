@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   dedupeJobs,
+  fixMojibake,
   inferLevel,
   inferRemote,
   inferRoleType,
@@ -148,5 +149,22 @@ describe("requiredForLevel", () => {
   it("sets dimension bars that rise with the level", () => {
     expect(requiredForLevel(3)).toEqual({ verification: 55, economy: 55, steering: 55, correctness: 65 });
     expect(requiredForLevel(5).verification).toBeGreaterThan(requiredForLevel(1).verification!);
+  });
+});
+
+describe("fixMojibake", () => {
+  it("repairs double-encoded characters from the feeds", () => {
+    expect(fixMojibake("Sotheby\u00e2\u0080\u0099s")).toBe("Sotheby\u2019s");
+    expect(fixMojibake("Sotheby's")).toBe("Sotheby's");
+    expect(fixMojibake("Café")).toBe("Café");
+  });
+
+  it("keeps a real apostrophe in a company name", () => {
+    const job = normalizeRemoteok({
+      position: "Senior Software Engineer",
+      company: "Sotheby\u00e2\u0080\u0099s",
+      url: "https://remoteok.com/remote-jobs/remote-senior-software-engineer-sothebys-1137545",
+    });
+    expect(job?.company).toBe("Sotheby\u2019s");
   });
 });

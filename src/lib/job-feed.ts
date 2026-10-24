@@ -27,8 +27,25 @@ export function isEngineeringRole(title: string) {
   return ENGINEERING_ROLE.test(title || "");
 }
 
+/**
+ * Some feeds double-encode UTF-8, so "Sotheby’s" arrives as "Sothebyâs".
+ * Rebuild the bytes when every code point fits in one byte and the result is valid UTF-8.
+ */
+export function fixMojibake(text: string) {
+  const t = text || "";
+  if (!/[\u0080-\u00ff]/.test(t)) return t;
+  if ([...t].some((c) => c.charCodeAt(0) > 0xff)) return t;
+  const repaired = new TextDecoder("utf-8").decode(Uint8Array.from(t, (c) => c.charCodeAt(0)));
+  if (repaired.includes("\uFFFD") || /[\u0080-\u009f]/.test(repaired)) return t;
+  return repaired;
+}
+
+function clean(text: unknown) {
+  return fixMojibake(String(text ?? "")).trim();
+}
+
 export function decodeEntities(text: string) {
-  return (text || "")
+  return clean(text)
     .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
     .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
     .replace(/&amp;/g, "&")
@@ -112,16 +129,14 @@ function slug(text: string) {
   return (text || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 }
 
-function job(
-  partial: Omit<LiveJob, "required"> & { required?: Partial<Scores> },
-): LiveJob {
+function job(partial: Omit<LiveJob, "required"> & { required?: Partial<Scores> }): LiveJob {
   return { ...partial, required: partial.required ?? requiredForLevel(partial.level) };
 }
 
 export function normalizeRemoteok(raw: any): LiveJob | null {
-  const title = String(raw?.position ?? "").trim();
-  const company = String(raw?.company ?? "").trim();
-  let url = String(raw?.url ?? raw?.apply_url ?? "").trim();
+  const title = clean(raw?.position);
+  const company = clean(raw?.company);
+  let url = clean(raw?.url ?? raw?.apply_url);
   if (!title || !company || !url || !isEngineeringRole(title)) return null;
   if (url.startsWith("/")) url = `https://remoteok.com${url}`;
   const salaryMin = Number(raw?.salary_min ?? 0) || 0;
@@ -134,27 +149,27 @@ export function normalizeRemoteok(raw: any): LiveJob | null {
     id: `remoteok-${raw?.id ?? slug(`${title}-${company}`)}`,
     title,
     company,
-    location: String(raw?.location ?? "").trim() || "Remote",
+    location: clean(raw?.location) || "Remote",
     remote: true,
     level,
     role_type: inferRoleType(`${title} ${tags}`),
     salary_min: min,
     salary_max: max,
-    description: truncate(stripHtml(String(raw?.description ?? "")), 200),
+    description: truncate(stripHtml(clean(raw?.description)), 200),
     url,
     source: "Remote OK",
   });
 }
 
 export function normalizeRemotive(raw: any): LiveJob | null {
-  const title = String(raw?.title ?? "").trim();
-  const company = String(raw?.company_name ?? "").trim();
-  const url = String(raw?.url ?? "").trim();
+  const title = clean(raw?.title);
+  const company = clean(raw?.company_name);
+  const url = clean(raw?.url);
   if (!title || !company || !url || !isEngineeringRole(title)) return null;
-  const salary = parseSalaryString(String(raw?.salary ?? ""));
+  const salary = parseSalaryString(clean(raw?.salary));
   const level = inferLevel(title, salary.min);
   const tags = Array.isArray(raw?.tags) ? raw.tags.join(" ") : "";
-  const location = String(raw?.candidate_required_location ?? "").trim();
+  const location = clean(raw?.candidate_required_location);
   return job({
     id: `remotive-${raw?.id ?? slug(`${title}-${company}`)}`,
     title,
@@ -165,7 +180,7 @@ export function normalizeRemotive(raw: any): LiveJob | null {
     role_type: inferRoleType(`${title} ${tags}`),
     salary_min: salary.min,
     salary_max: salary.max,
-    description: truncate(stripHtml(String(raw?.description ?? "")), 200),
+    description: truncate(stripHtml(clean(raw?.description)), 200),
     url,
     source: "Remotive",
   });
@@ -175,12 +190,14 @@ export function normalizeRemotive(raw: any): LiveJob | null {
  * "Who is hiring?" posts follow a pipe-delimited convention:
  * Company | Role | Location | Remote/Onsite | Full-time | blurb + link
  */
-export function parseHnPosting(commentText: string): Omit<LiveJob, "required" | "id" | "source" | "role_type" | "salary_min" | "salary_max"> | null {
+export function parseHnPosting(
+  commentText: string,
+): Omit<LiveJob, "required" | "id" | "source" | "role_type" | "salary_min" | "salary_max"> | null {
   const html = commentText || "";
   const url = firstLink(html);
   if (!url) return null;
   const text = decodeEntities(html.replace(/<p>/gi, "\n").replace(/<a[^>]*>/gi, " ").replace(/<[^>]*>/g, ""));
-  const parts = text.split("|").map((p) => p.trim()).filter(Boolean);
+  const parts = text.split("|").map((p) => clean(p)).filter(Boolean);
   if (parts.length < 3) return null;
   const [company, title] = parts;
   if (!company || !title || company.length > 60 || title.length > 90) return null;
