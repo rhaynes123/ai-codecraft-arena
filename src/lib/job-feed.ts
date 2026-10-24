@@ -67,9 +67,9 @@ export function truncate(text: string, max: number) {
 /** First link in an HTML snippet — feeds hide the real posting URL behind markup. */
 export function firstLink(html: string) {
   const anchor = /href=["']([^"']+)["']/i.exec(html || "");
-  if (anchor?.[1]) return anchor[1];
-  const bare = /(https?:\/\/[^\s<>"']+)/i.exec(html || "");
-  return bare?.[1] ?? "";
+  const found = anchor?.[1] || /(https?:\/\/[^\s<>"']+)/i.exec(html || "")?.[1] || "";
+  // A bare link at the end of a sentence or bracket picks up trailing punctuation.
+  return found.replace(/[),.;\]]+$/, "");
 }
 
 export function inferRoleType(text: string): string {
