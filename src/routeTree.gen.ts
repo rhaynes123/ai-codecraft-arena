@@ -19,6 +19,7 @@ import { Route as ChallengesIndexRouteImport } from './routes/challenges.index'
 import { Route as ChallengesSlugRouteImport } from './routes/challenges.$slug'
 import { Route as AuthenticatedReportsAttemptIdRouteImport } from './routes/_authenticated/reports.$attemptId'
 import { Route as AuthenticatedWorkspaceAttemptIdRouteImport } from './routes/_authenticated/workspace.$attemptId'
+import { Route as ApiPublicJobsRouteImport } from './routes/api/public/jobs'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -71,6 +72,11 @@ const AuthenticatedWorkspaceAttemptIdRoute =
     path: '/workspace/$attemptId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicJobsRoute = ApiPublicJobsRouteImport.update({
+  id: '/api/public/jobs',
+  path: '/api/public/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/challenges/': typeof ChallengesIndexRoute
   '/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
   '/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
+  '/api/public/jobs': typeof ApiPublicJobsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/challenges': typeof ChallengesIndexRoute
   '/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
   '/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
+  '/api/public/jobs': typeof ApiPublicJobsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/challenges/': typeof ChallengesIndexRoute
   '/_authenticated/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
   '/_authenticated/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
+  '/api/public/jobs': typeof ApiPublicJobsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/challenges/'
     | '/reports/$attemptId'
     | '/workspace/$attemptId'
+    | '/api/public/jobs'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/challenges'
     | '/reports/$attemptId'
     | '/workspace/$attemptId'
+    | '/api/public/jobs'
   id:
     | '__root__'
     | '/'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/challenges/'
     | '/_authenticated/reports/$attemptId'
     | '/_authenticated/workspace/$attemptId'
+    | '/api/public/jobs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -151,6 +163,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ChallengesSlugRoute: typeof ChallengesSlugRoute
   ChallengesIndexRoute: typeof ChallengesIndexRoute
+  ApiPublicJobsRoute: typeof ApiPublicJobsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkspaceAttemptIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/jobs': {
+      id: '/api/public/jobs'
+      path: '/api/public/jobs'
+      fullPath: '/api/public/jobs'
+      preLoaderRoute: typeof ApiPublicJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -252,6 +272,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ChallengesSlugRoute: ChallengesSlugRoute,
   ChallengesIndexRoute: ChallengesIndexRoute,
+  ApiPublicJobsRoute: ApiPublicJobsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
