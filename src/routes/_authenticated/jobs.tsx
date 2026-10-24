@@ -46,6 +46,9 @@ function Jobs() {
       (!remoteOnly || j.remote) &&
       (!minSalary || (j.salary_max || j.salary_min) >= minSalary),
   );
+  // Show how many live openings sit behind each filter so a chip that matches nothing is obvious.
+  const counts: Record<string, number> = { all: (jobs.data ?? []).length };
+  for (const j of jobs.data ?? []) counts[j.role_type] = (counts[j.role_type] ?? 0) + 1;
   const chip = (a: boolean) => cn("rounded-sm border px-2.5 py-1 font-mono text-xs", a ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent");
 
   return (
