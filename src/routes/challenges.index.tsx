@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Clock } from "lucide-react";
+import { ArrowUpRight, Clock, GraduationCap } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useChallenges } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +11,8 @@ export const Route = createFileRoute("/challenges/")({
   head: () => ({
     meta: [
       { title: "Challenge catalog — Steer" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Real-world repo challenges: async refactors, race conditions, API migrations and state machine edge cases." },
       { property: "og:title", content: "Challenge catalog — Steer" },
       { property: "og:description", content: "Real-world repo challenges for AI-assisted engineers." },
@@ -35,8 +38,11 @@ function Catalog() {
     <div className="min-h-screen">
       <AppHeader />
       <main className="mx-auto max-w-7xl px-4 py-10">
-        <h1 className="text-3xl font-bold">Challenges</h1>
-        <p className="mt-1 text-muted-foreground">Pick a repo, open the IDE, and pair with the AI.</p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div><h1 className="text-3xl font-bold">Challenges</h1>
+          <p className="mt-1 text-muted-foreground">Pick a repo, open the IDE, and pair with the AI.</p></div>
+          <Button asChild variant="outline"><Link to="/training"><GraduationCap />Detroit bootcamps & training<ArrowUpRight /></Link></Button>
+        </div>
         <div className="mt-6 flex flex-wrap gap-2">
           {["All", "Easy", "Medium", "Hard"].map((d) => <button key={d} className={chip(diff === d)} onClick={() => setDiff(d)}>{d}</button>)}
           <span className="mx-2 w-px bg-border" />
