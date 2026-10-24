@@ -190,6 +190,17 @@ export function normalizeRemotive(raw: any): LiveJob | null {
  * "Who is hiring?" posts follow a pipe-delimited convention:
  * Company | Role | Location | Remote/Onsite | Full-time | blurb + link
  */
+/** Postings sometimes smuggle the company site into the name field: "Sendery ( https://sendery.co)". */
+function stripInlineUrl(text: string) {
+  return (text || "")
+    .replace(/\(?\s*(?:https?:\/\/|www\.)[^\s)]+\s*\)?/gi, " ")
+    .replace(/\s*\(\s*\)\s*/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+const POSTING_META = /^(remote|onsite|on-site|hybrid|full[- ]?time|part[- ]?time|contract|b2b|worldwide|anywhere)\b/i;
+
 export function parseHnPosting(
   commentText: string,
 ): Omit<LiveJob, "required" | "id" | "source" | "role_type" | "salary_min" | "salary_max"> | null {
@@ -199,17 +210,21 @@ export function parseHnPosting(
   const text = decodeEntities(html.replace(/<p>/gi, "\n").replace(/<a[^>]*>/gi, " ").replace(/<[^>]*>/g, ""));
   const parts = text.split("|").map((p) => clean(p)).filter(Boolean);
   if (parts.length < 3) return null;
-  const [company, title] = parts;
+  const company = stripInlineUrl(parts[0] ?? "");
+  const title = stripInlineUrl(parts[1] ?? "");
   if (!company || !title || company.length > 60 || title.length > 90) return null;
   if (!isEngineeringRole(title)) return null;
-  const rest = parts.slice(2).join(" | ");
+  const locationRaw = parts[2] ?? "";
+  const remoteText = parts.slice(2).join(" | ");
+  let blurb = parts.slice(3);
+  while (blurb.length && POSTING_META.test(blurb[0] ?? "")) blurb = blurb.slice(1);
   return {
     title,
     company,
-    location: parts[2] ?? "Remote",
-    remote: inferRemote(rest, false),
+    location: locationRaw.length > 0 && locationRaw.length <= 45 ? locationRaw : "See posting",
+    remote: inferRemote(remoteText, false),
     level: inferLevel(title),
-    description: truncate(stripHtml(rest), 200),
+    description: truncate(stripHtml(stripInlineUrl(blurb.join(" | "))), 200),
     url,
   };
 }
