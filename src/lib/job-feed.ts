@@ -263,3 +263,13 @@ export function dedupeJobs(jobs: LiveJob[]): LiveJob[] {
   }
   return out;
 }
+
+/**
+ * A posting's own title is a better signal than its tag soup — RemoteOK tags a
+ * "Senior Frontend Engineer" role with backend, game dev and finance alike.
+ */
+export function roleTypeFor(title: string, tags = ""): string {
+  const fromTitle = inferRoleType(title);
+  if (fromTitle !== "full-stack" || /full[- ]?stack|fullstack/i.test(title || "")) return fromTitle;
+  return inferRoleType(tags);
+}
