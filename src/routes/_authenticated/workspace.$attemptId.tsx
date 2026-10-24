@@ -35,7 +35,7 @@ function parseBlocks(text: string) {
   const re = /```[a-zA-Z]*\s+path=([^\s`]+)\n([\s\S]*?)```/g;
   const out: { path: string; content: string }[] = [];
   let m;
-  while ((m = re.exec(text))) out.push({ path: m[1], content: m[2] });
+  while ((m = re.exec(text))) out.push({ path: m[1]!, content: m[2]! });
   return out;
 }
 

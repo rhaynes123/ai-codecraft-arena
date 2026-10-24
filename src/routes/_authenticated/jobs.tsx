@@ -49,7 +49,7 @@ function Jobs() {
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">your level</p>
           <div className="mt-2 flex flex-wrap items-baseline gap-3">
             <span className="font-mono text-4xl font-bold text-primary">L{userLevel}</span>
-            <span className="text-xl font-semibold">{LEVELS[userLevel - 1].name} engineer</span>
+            <span className="text-xl font-semibold">{LEVELS[userLevel - 1]!.name} engineer</span>
             {sum.ranked ? <span className="font-mono text-sm text-muted-foreground">rating {sum.rating}</span> : <span className="text-sm text-muted-foreground">— submit a challenge to get your real level</span>}
           </div>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -71,9 +71,9 @@ function Jobs() {
           return (
             <section key={lvl} className="mt-8">
               <h2 className="flex items-center gap-3 font-mono text-sm">
-                <span className="font-bold">L{lvl} · {LEVELS[lvl - 1].name}</span>
+                <span className="font-bold">L{lvl} · {LEVELS[lvl - 1]!.name}</span>
                 <span className={cn("rounded-sm px-1.5 py-0.5 text-[10px] uppercase", access === "open" ? "bg-primary text-primary-foreground" : access === "stretch" ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground")}>
-                  {access === "open" ? "open to you" : access === "stretch" ? "stretch" : `unlocks at rating ${LEVELS[lvl - 1].min}`}
+                  {access === "open" ? "open to you" : access === "stretch" ? "stretch" : `unlocks at rating ${LEVELS[lvl - 1]!.min}`}
                 </span>
               </h2>
               <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">

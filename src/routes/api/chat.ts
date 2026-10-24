@@ -38,7 +38,7 @@ export const Route = createFileRoute("/api/chat")({
           return Response.json({ error: "This attempt is already submitted." }, { status: 400 });
         }
 
-        const last = body.messages[body.messages.length - 1];
+        const last = body.messages[body.messages.length - 1]!;
         const context = (body.context ?? []).slice(0, 10);
         const contextText = context.map((f) => `--- ${f.path} ---\n${f.content}`).join("\n\n");
         const cost = creditCost(last.content.length + contextText.length);
@@ -55,7 +55,7 @@ export const Route = createFileRoute("/api/chat")({
         const challenge = attempt.challenges as { title: string; description: string } | null;
         const gateway = createGateway(request);
         const result = streamText({
-          model: gateway.model,
+          model: gateway.model as any,
           instructions: `${INSTRUCTIONS}\n\nCurrent challenge: ${challenge?.title}\n${challenge?.description}`,
           messages: history,
           abortSignal: request.signal,

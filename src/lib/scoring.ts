@@ -1,6 +1,6 @@
 // Pure scoring, level and job-matching rules. Shared by server and UI.
 
-export type SessionEvent = { type: string; payload: Record<string, any>; created_at?: string };
+export type SessionEvent = { type: string; payload: any; created_at?: string };
 export type Dimension = "verification" | "economy" | "steering" | "correctness";
 export const DIMENSIONS: { key: Dimension; label: string; short: string }[] = [
   { key: "verification", label: "Verification Rigor", short: "Verify" },
@@ -30,8 +30,8 @@ export function computeMetrics(events: SessionEvent[], passRate: number) {
   events.forEach((e, i) => {
     if (e.type !== "diff_applied") return;
     for (let j = i + 1; j < events.length; j++) {
-      if (events[j].type === "test_run") { verifiedApplies++; break; }
-      if (events[j].type === "diff_applied") break;
+      if (events[j]!.type === "test_run") { verifiedApplies++; break; }
+      if (events[j]!.type === "diff_applied") break;
     }
   });
   const applyCoverage = applies.length ? verifiedApplies / applies.length : testRuns.length ? 1 : 0;

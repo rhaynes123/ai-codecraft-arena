@@ -31,7 +31,7 @@ function Report() {
   if (!r) return <div className="min-h-screen"><AppHeader /><p className="p-10 text-center text-muted-foreground">Report not found.</p></div>;
 
   const scores = { verification: r.verification, economy: r.economy, steering: r.steering, correctness: r.correctness };
-  const evidence = (r.evidence ?? {}) as Record<string, any>;
+  const evidence: any = r.evidence ?? {};
   const tips = (r.tips ?? []) as string[];
   const tests = (r.tests ?? {}) as { passed: number; total: number; results: any[] };
 

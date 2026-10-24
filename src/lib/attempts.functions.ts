@@ -3,7 +3,7 @@ import { streamText, Output, jsonSchema } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { combineScores, computeMetrics, overallScore, type Scores } from "./scoring";
 
-type TestSummary = { name: string; file: string; passed: boolean; error?: string; hidden?: boolean };
+type TestSummary = { name: string; file: string; passed: boolean; error?: string | undefined; hidden?: boolean | undefined };
 
 async function ownedAttempt(supabase: any, attemptId: string) {
   const { data, error } = await supabase
@@ -110,7 +110,7 @@ export const submitAttempt = createServerFn({ method: "POST" })
       const { createGateway, reasoningOptions } = await import("./ai.server");
       const gateway = createGateway();
       const result = streamText({
-        model: gateway.model,
+        model: gateway.model as any,
         instructions:
           "You are an expert interviewer grading how a software engineer collaborated with an AI coding assistant. Score each dimension 0-100. verification: did they test and scrutinize AI output? economy: were prompts clear, concise, with only relevant context? steering: did they catch and correct flawed AI output and iterate efficiently? correctness: readability and quality of the final code (tests are scored separately). Cite concrete evidence from the transcript in one or two sentences per dimension. Give 3-5 specific, actionable coaching tips. Write the summary in second person, 2-3 sentences.",
         prompt: `Challenge: ${ch.title}\n${ch.description}\nAcceptance criteria:\n- ${ch.acceptance.join("\n- ")}\n\nTests: ${passed}/${total} passed (incl. hidden).\nHints used: ${attempt.hints_used}\nSession stats: ${JSON.stringify(metrics.stats)}\n\nTranscript:\n${transcript || "(no AI interaction)"}\n\nFinal code:\n${finalCode}`,
