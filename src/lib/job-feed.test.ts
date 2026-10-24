@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  stripHtml,
   dedupeJobs,
   fixMojibake,
   isEngineeringRole,
+  roleTypeFor,
   inferLevel,
   inferRemote,
   inferRoleType,
@@ -207,5 +209,18 @@ describe("isEngineeringRole", () => {
     expect(isEngineeringRole("Senior Backend Engineer")).toBe(true);
     expect(isEngineeringRole("Tier III Service Desk Engineer")).toBe(false);
     expect(isEngineeringRole("Sales Development Representative")).toBe(false);
+  });
+});
+
+describe("roleTypeFor", () => {
+  it("trusts the posting title over the tag soup", () => {
+    expect(roleTypeFor("Senior Frontend Engineer", "react,backend,design,game dev")).toBe("frontend");
+    expect(roleTypeFor("Software Engineer", "backend,python")).toBe("backend");
+    expect(roleTypeFor("Senior React Full-stack Developer", "react")).toBe("full-stack");
+    expect(roleTypeFor("Site Reliability Engineer", "react")).toBe("platform");
+  });
+
+  it("does not leave a space before punctuation when markup is stripped", () => {
+    expect(stripHtml("As a Principal Engineer <b>,</b> you will ship")).toBe("As a Principal Engineer, you will ship");
   });
 });
