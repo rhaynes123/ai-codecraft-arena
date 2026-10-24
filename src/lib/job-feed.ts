@@ -22,9 +22,15 @@ export type LiveJob = {
 const ENGINEERING_ROLE =
   /\b(engineer|engineering|developer|programmer|sre|devops|architect|full[- ]?stack|fullstack|frontend|front[- ]?end|backend|back[- ]?end|software|platform)\b/i;
 
+/** Titles that borrow an engineering word without being an engineering job. */
+const NON_ENGINEERING =
+  /\b(service desk|help desk|it support|customer support|customer success|sales engineer|solutions consultant|account executive|recruiter|copywriter|content writer)\b/i;
+
 /** Only engineering roles are relevant here, and the feeds mix in sales, writing and support posts. */
 export function isEngineeringRole(title: string) {
-  return ENGINEERING_ROLE.test(title || "");
+  const t = title || "";
+  if (NON_ENGINEERING.test(t)) return false;
+  return ENGINEERING_ROLE.test(t);
 }
 
 /**

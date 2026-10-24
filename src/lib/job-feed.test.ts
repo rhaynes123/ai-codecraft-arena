@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dedupeJobs,
   fixMojibake,
+  isEngineeringRole,
   inferLevel,
   inferRemote,
   inferRoleType,
@@ -198,5 +199,13 @@ describe("parseHnPosting company cleanup", () => {
     );
     expect(parsed?.company).toBe("Chronograph");
     expect(parsed?.url).toBe("https://chronograph.pe/jobs");
+  });
+});
+
+describe("isEngineeringRole", () => {
+  it("keeps engineering titles and drops support titles that borrow the word", () => {
+    expect(isEngineeringRole("Senior Backend Engineer")).toBe(true);
+    expect(isEngineeringRole("Tier III Service Desk Engineer")).toBe(false);
+    expect(isEngineeringRole("Sales Development Representative")).toBe(false);
   });
 });
