@@ -53,7 +53,7 @@ function Dashboard() {
   const inDetroit = (profile.data as any)?.region === "detroit";
   async function toggleDetroit(on: boolean) {
     const { error } = await supabase.rpc("set_region", { _region: on ? "detroit" : (null as any) });
-    if (error) return toast.error("Couldn't save that setting. Try again.");
+    if (error) { toast.error("Couldn't save that setting. Try again."); return; }
     qc.invalidateQueries({ queryKey: ["profile"] });
   }
   const done = new Set((reports.data ?? []).map((r) => r.challenges?.slug));

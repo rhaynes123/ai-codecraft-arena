@@ -234,7 +234,7 @@ const POSTING_META = /^(remote|onsite|on-site|hybrid|full[- ]?time|part[- ]?time
 
 export function parseHnPosting(
   commentText: string,
-): Omit<LiveJob, "required" | "id" | "source" | "role_type" | "salary_min" | "salary_max"> | null {
+): Omit<LiveJob, "required" | "id" | "source" | "role_type" | "salary_min" | "salary_max" | "local"> | null {
   const html = commentText || "";
   const url = firstLink(html);
   if (!url) return null;
