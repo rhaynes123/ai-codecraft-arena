@@ -62,7 +62,7 @@ export function decodeEntities(text: string) {
 }
 
 export function stripHtml(html: string) {
-  return decodeEntities((html || "").replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
+  return decodeEntities((html || "").replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").replace(/\s+([,.;:!?])/g, "$1").trim();
 }
 
 export function truncate(text: string, max: number) {
@@ -158,7 +158,7 @@ export function normalizeRemoteok(raw: any): LiveJob | null {
     location: clean(raw?.location) || "Remote",
     remote: true,
     level,
-    role_type: inferRoleType(`${title} ${tags}`),
+    role_type: roleTypeFor(title, tags),
     salary_min: min,
     salary_max: max,
     description: truncate(stripHtml(clean(raw?.description)), 200),
@@ -183,7 +183,7 @@ export function normalizeRemotive(raw: any): LiveJob | null {
     location: location || "Remote",
     remote: inferRemote(location, true),
     level,
-    role_type: inferRoleType(`${title} ${tags}`),
+    role_type: roleTypeFor(title, tags),
     salary_min: salary.min,
     salary_max: salary.max,
     description: truncate(stripHtml(clean(raw?.description)), 200),
@@ -244,7 +244,7 @@ export function normalizeHn(hit: any): LiveJob | null {
   return job({
     ...parsed,
     id: `hn-${hit?.objectID ?? slug(`${parsed.title}-${parsed.company}`)}`,
-    role_type: inferRoleType(`${parsed.title} ${parsed.description}`),
+    role_type: roleTypeFor(parsed.title, parsed.description),
     salary_min: 0,
     salary_max: 0,
     source: "HN Who's Hiring",
