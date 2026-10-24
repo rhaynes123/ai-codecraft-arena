@@ -6,6 +6,10 @@ import { toast } from "sonner";
 import { Check, FileCode, Lightbulb, Paperclip, Play, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Logo, useProfile } from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +66,8 @@ function Workspace() {
   const [decided, setDecided] = useState<Record<string, "applied" | "rejected">>({});
   const [hints, setHints] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [scoring, setScoring] = useState(false);
   const editTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -99,19 +105,19 @@ function Workspace() {
   }
 
   async function doSubmit() {
-    if (!confirm("Submit for scoring? Hidden tests will run and the attempt will be locked.")) return;
+    setConfirmOpen(false);
     setBusy(true);
+    setScoring(true);
     try {
       const h = await hidden({ data: { attemptId } });
       const out = await runTests(files.filter((f) => !isTest(f.path)), [...files.filter((f) => isTest(f.path)), ...h.files.map((f) => ({ ...f, hidden: true }))]);
       await save(files);
-      toast.message("Scoring your session…");
-      await submit({ data: { attemptId, files, results: out.results.map((r) => ({ ...r, error: r.error?.slice(0, 300) })) } });
+            await submit({ data: { attemptId, files, results: out.results.map((r) => ({ ...r, error: r.error?.slice(0, 300) })) } });
       qc.invalidateQueries();
       navigate({ to: "/reports/$attemptId", params: { attemptId } });
     } catch (e: any) {
-      toast.error(e.message ?? "Submit failed");
-    } finally { setBusy(false); }
+      toast.error(e.message ?? "Submit failed. Please try again.");
+    } finally { setBusy(false); setScoring(false); }
   }
 
   const ctxFiles = files.filter((f) => attached.includes(f.path));
@@ -170,6 +176,27 @@ function Workspace() {
 
   return (
     <div className="flex h-screen flex-col bg-panel">
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Submit for scoring?</AlertDialogTitle>
+            <AlertDialogDescription>Hidden tests will run and this attempt will be locked. Scoring takes up to a minute.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep working</AlertDialogCancel>
+            <AlertDialogAction onClick={doSubmit}>Submit</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {scoring && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-background/90 backdrop-blur">
+          <div className="text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-muted border-t-primary" />
+            <p className="mt-4 font-semibold">Running hidden tests and scoring your session…</p>
+            <p className="mt-1 text-sm text-muted-foreground">This can take up to a minute.</p>
+          </div>
+        </div>
+      )}
       <header className="flex h-12 items-center gap-4 border-b bg-background px-3">
         <Logo />
         <span className="truncate text-sm text-muted-foreground">{ch.title}</span>
@@ -177,7 +204,7 @@ function Workspace() {
           <span className="font-mono text-xs text-muted-foreground">{profile.data?.credits ?? "—"} credits</span>
           <Button size="sm" variant="outline" onClick={useHint} disabled={hints >= ch.hints.length}><Lightbulb className="mr-1 h-3.5 w-3.5" />Hint ({hints}/{ch.hints.length})</Button>
           <Button size="sm" variant="secondary" onClick={runVisible} disabled={busy}><Play className="mr-1 h-3.5 w-3.5" />Run tests</Button>
-          <Button size="sm" onClick={doSubmit} disabled={busy}>Submit</Button>
+          <Button size="sm" onClick={() => setConfirmOpen(true)} disabled={busy}>Submit</Button>
         </div>
       </header>
       <ResizablePanelGroup orientation="horizontal" className="flex-1">
@@ -258,9 +285,9 @@ function Workspace() {
             </div>
             <div className="border-t p-2">
               <Textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask your AI pair…" rows={3}
-                onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send(); }} />
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
               <div className="mt-2 flex items-center justify-between">
-                <span className="font-mono text-[11px] text-muted-foreground">{input ? `costs ${cost} credit${cost > 1 ? "s" : ""}` : "⌘/Ctrl+Enter to send"}</span>
+                <span className="font-mono text-[11px] text-muted-foreground">{input ? `costs ${cost} credit${cost > 1 ? "s" : ""}` : "Enter to send · Shift+Enter for new line"}</span>
                 <Button size="sm" onClick={send} disabled={streaming || !input.trim()}><Send className="h-3.5 w-3.5" /></Button>
               </div>
             </div>
