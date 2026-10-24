@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { summarizeReports, useMyReports } from "@/lib/queries";
 import { DIMENSIONS, LEVELS, formatSalary, jobAccess, jobMatch, type Scores } from "@/lib/scoring";
-import type { LiveJob } from "@/lib/job-feed";
+import { truncate, type LiveJob } from "@/lib/job-feed";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/jobs")({
@@ -132,7 +132,7 @@ function JobCard({ job, access, mine }: { job: LiveJob; access: string; mine: Sc
         {locked ? <Lock className="h-4 w-4 text-muted-foreground" /> : <span className={cn("font-mono text-sm font-bold", match >= 85 ? "text-success" : match >= 60 ? "text-warning" : "text-muted-foreground")}>{match}%</span>}
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{job.location}</span>
+        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{truncate(job.location, 42)}</span>
         <Badge variant="secondary" className="font-mono text-[10px]">{job.role_type}</Badge>
         <Badge variant="outline" className="font-mono text-[10px]">{job.source}</Badge>
       </div>
