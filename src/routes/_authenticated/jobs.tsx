@@ -1,15 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Lock, MapPin, RotateCw } from "lucide-react";
-import { AppHeader } from "@/components/AppHeader";
+import { AppHeader, useProfile } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { summarizeReports, useMyReports } from "@/lib/queries";
 import { DIMENSIONS, LEVELS, formatSalary, jobAccess, jobMatch, type Scores } from "@/lib/scoring";
-import { truncate, type LiveJob } from "@/lib/job-feed";
+import { hiresInUs, truncate, type LiveJob } from "@/lib/job-feed";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/jobs")({
@@ -37,6 +37,15 @@ function Jobs() {
   const [role, setRole] = useState("all");
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [minSalary, setMinSalary] = useState(0);
+  const [detroit, setDetroit] = useState(false);
+  const profile = useProfile();
+  const seeded = useRef(false);
+  // People who said they're in Detroit Metro land on local roles first; they can still switch it off.
+  useEffect(() => {
+    if (seeded.current || !profile.data) return;
+    seeded.current = true;
+    if ((profile.data as any).region === "detroit") setDetroit(true);
+  }, [profile.data]);
 
   const sum = summarizeReports(reports.data ?? []);
   const userLevel = sum.ranked ? sum.level.level : 1;
@@ -46,6 +55,10 @@ function Jobs() {
       (!remoteOnly || j.remote) &&
       (!minSalary || (j.salary_max || j.salary_min) >= minSalary),
   );
+  const localCount = (jobs.data ?? []).filter((j) => j.local).length;
+  const localOnly = filtered.filter((j) => j.local);
+  const usFallback = detroit && !localOnly.length ? filtered.filter(hiresInUs) : [];
+  const shown = detroit ? (localOnly.length ? localOnly : usFallback) : filtered;
   // Show how many live openings sit behind each filter so a chip that matches nothing is obvious.
   const counts: Record<string, number> = { all: (jobs.data ?? []).length };
   for (const j of jobs.data ?? []) counts[j.role_type] = (counts[j.role_type] ?? 0) + 1;
@@ -73,6 +86,8 @@ function Jobs() {
           ))}
           <span className="mx-2 h-5 w-px bg-border" />
           {[0, 120000, 180000, 250000].map((s) => <button key={s} className={chip(minSalary === s)} onClick={() => setMinSalary(s)}>{s ? `$${s / 1000}k+` : "any salary"}</button>)}
+          <span className="mx-2 h-5 w-px bg-border" />
+          <button className={cn(chip(detroit), !localCount && "opacity-60")} onClick={() => setDetroit((d) => !d)}>Detroit Metro · {localCount}</button>
           <div className="ml-auto flex items-center gap-2"><Switch id="remote" checked={remoteOnly} onCheckedChange={setRemoteOnly} /><Label htmlFor="remote" className="text-sm">Remote only</Label></div>
         </div>
 
@@ -91,14 +106,20 @@ function Jobs() {
           </div>
         )}
 
-        {!jobs.isLoading && !jobs.isError && !filtered.length && (
+        {!jobs.isLoading && !jobs.isError && detroit && !localOnly.length && (
+          <p className="mt-8 rounded-lg border bg-card p-4 text-sm text-muted-foreground">
+            No Detroit Metro or Michigan openings match right now. Below are remote roles open to US-based engineers, which you can apply to from Michigan.
+          </p>
+        )}
+
+        {!jobs.isLoading && !jobs.isError && !shown.length && (
           <p className="mt-8 rounded-lg border bg-card p-6 text-center text-sm text-muted-foreground">
             No live openings match these filters right now. Try widening the role or salary.
           </p>
         )}
 
         {[5, 4, 3, 2, 1].map((lvl) => {
-          const group = filtered.filter((j) => j.level === lvl);
+          const group = shown.filter((j) => j.level === lvl);
           if (!group.length) return null;
           const access = jobAccess(lvl, userLevel);
           return (
@@ -116,7 +137,7 @@ function Jobs() {
           );
         })}
         <p className="mt-10 text-center text-xs text-muted-foreground">
-          Live openings pulled from Remote OK, Remotive and the current Hacker News "Who is hiring" thread. Each card links to the original posting.
+          Live openings pulled from Remote OK, Remotive and the current Hacker News "Who is hiring" thread. Each card links to the original posting. Detroit Metro covers postings that name a metro city or Michigan.
         </p>
       </main>
     </div>
@@ -140,6 +161,7 @@ function JobCard({ job, access, mine }: { job: LiveJob; access: string; mine: Sc
         <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{truncate(job.location, 42)}</span>
         <Badge variant="secondary" className="font-mono text-[10px]">{job.role_type}</Badge>
         <Badge variant="outline" className="font-mono text-[10px]">{job.source}</Badge>
+        {job.local && <Badge className="font-mono text-[10px]">Detroit Metro</Badge>}
       </div>
       <p className="mt-3 font-mono text-lg font-bold">{salary}</p>
       <p className="mt-2 text-sm text-muted-foreground">{job.description}</p>
