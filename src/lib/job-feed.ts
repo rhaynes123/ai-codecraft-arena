@@ -194,8 +194,11 @@ export function normalizeRemotive(raw: any): LiveJob | null {
 function stripInlineUrl(text: string) {
   return (text || "")
     .replace(/\(?\s*(?:https?:\/\/|www\.)[^\s)]+\s*\)?/gi, " ")
+    // "Chronograph (chronograph.pe)" — a bare domain in brackets is the company site, not part of the name.
+    .replace(/\(\s*[a-z0-9-]+(?:\.[a-z]{2,}){1,2}\s*\)/gi, " ")
     .replace(/\s*\(\s*\)\s*/g, " ")
     .replace(/\s{2,}/g, " ")
+    .replace(/[,;:]+$/, "")
     .trim();
 }
 
