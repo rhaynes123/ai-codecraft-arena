@@ -1,0 +1,224 @@
+// Normalizes live listings from public job feeds into the shape the job cards render.
+// Pure helpers only — no network, no secrets — so the server route and the tests share one source of truth.
+
+import type { Scores } from "@/lib/scoring";
+
+export type LiveJob = {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  remote: boolean;
+  level: number;
+  role_type: string;
+  salary_min: number;
+  salary_max: number;
+  required: Partial<Scores>;
+  description: string;
+  url: string;
+  source: string;
+};
+
+const ENGINEERING_ROLE =
+  /\b(engineer|engineering|developer|programmer|sre|devops|architect|full[- ]?stack|fullstack|frontend|front[- ]?end|backend|back[- ]?end|software|platform)\b/i;
+
+/** Only engineering roles are relevant here, and the feeds mix in sales, writing and support posts. */
+export function isEngineeringRole(title: string) {
+  return ENGINEERING_ROLE.test(title || "");
+}
+
+export function decodeEntities(text: string) {
+  return (text || "")
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&nbsp;/g, " ");
+}
+
+export function stripHtml(html: string) {
+  return decodeEntities((html || "").replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
+}
+
+export function truncate(text: string, max: number) {
+  const t = (text || "").trim();
+  return t.length > max ? `${t.slice(0, max - 1).trimEnd()}…` : t;
+}
+
+/** First link in an HTML snippet — feeds hide the real posting URL behind markup. */
+export function firstLink(html: string) {
+  const anchor = /href=["']([^"']+)["']/i.exec(html || "");
+  if (anchor?.[1]) return anchor[1];
+  const bare = /(https?:\/\/[^\s<>"']+)/i.exec(html || "");
+  return bare?.[1] ?? "";
+}
+
+export function inferRoleType(text: string): string {
+  const t = (text || "").toLowerCase();
+  if (/full[- ]?stack|fullstack/.test(t)) return "full-stack";
+  if (/devops|\bsre\b|platform|infra|kubernetes|site reliability|cloud engineer/.test(t)) return "platform";
+  if (/back[- ]?end|backend|\bapi\b|golang|\bgo\b|ruby|python|java|php|rails|node|\.net|rust|\bc\+\+|\bdata engineer|machine learning/.test(t)) return "backend";
+  if (/front[- ]?end|frontend|react|vue|angular|ui engineer|web dev|typescript|css/.test(t)) return "frontend";
+  return "full-stack";
+}
+
+/** Seniority from the posting title, with salary floors lifting clearly mislabelled roles. */
+export function inferLevel(title: string, salaryMin = 0): number {
+  const t = (title || "").toLowerCase();
+  let level = 2;
+  if (/\b(junior|jun|intern|internship|graduate|trainee|associate|entry[- ]level)\b/.test(t)) level = 1;
+  else if (/\b(senior|sr|lead|expert|iii)\b/.test(t)) level = 3;
+  if (/\b(staff|specialist)\b/.test(t)) level = 4;
+  if (/\b(principal|architect|distinguished|fellow|head of engineering|director of engineering|vp of engineering|vp engineering)\b/.test(t)) level = 5;
+  if (salaryMin >= 170000) level = Math.max(level, 3);
+  if (salaryMin >= 210000) level = Math.max(level, 4);
+  if (salaryMin >= 250000) level = 5;
+  return level;
+}
+
+export function inferRemote(text: string, assumeRemote = false): boolean {
+  const t = (text || "").toLowerCase();
+  if (/\b(remote|worldwide|anywhere|any location|remote-first|remote first)\b/.test(t)) return true;
+  if (/\bonsite|\bhybrid\b|\bon-site\b/.test(t)) return false;
+  return assumeRemote;
+}
+
+/** Turn a free-text salary ("$170k - $200k", "70K-80K", "$35,3k- $52k") into annual dollars. */
+export function parseSalaryString(raw: string): { min: number; max: number } {
+  const text = (raw || "").toLowerCase();
+  if (!text.trim()) return { min: 0, max: 0 };
+  if (/\b(hour|hr|hours|task|day|week|month|project|contract)\b/.test(text)) return { min: 0, max: 0 };
+  const values = [...text.matchAll(/(\d[\d.,]*)\s*(k?)/gi)]
+    .map((m) => {
+      const digits = (m[1] || "").replace(/,(?=\d{3}$)/g, "").replace(",", ".");
+      const n = Number(digits);
+      if (!Number.isFinite(n) || n <= 0) return 0;
+      return m[2] ? n * 1000 : n;
+    })
+    .filter((n) => n >= 20000 && n <= 600000);
+  if (values.length < 2) return { min: 0, max: 0 };
+  return { min: Math.min(...values), max: Math.max(...values) };
+}
+
+/** Dimension bars a role of this level expects, used for the match percentage. */
+export function requiredForLevel(level: number): Partial<Scores> {
+  const base = [0, 30, 45, 55, 65, 75][Math.max(1, Math.min(5, level))] ?? 45;
+  return { verification: base, economy: base, steering: base, correctness: base + 10 };
+}
+
+function slug(text: string) {
+  return (text || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+}
+
+function job(
+  partial: Omit<LiveJob, "required"> & { required?: Partial<Scores> },
+): LiveJob {
+  return { ...partial, required: partial.required ?? requiredForLevel(partial.level) };
+}
+
+export function normalizeRemoteok(raw: any): LiveJob | null {
+  const title = String(raw?.position ?? "").trim();
+  const company = String(raw?.company ?? "").trim();
+  let url = String(raw?.url ?? raw?.apply_url ?? "").trim();
+  if (!title || !company || !url || !isEngineeringRole(title)) return null;
+  if (url.startsWith("/")) url = `https://remoteok.com${url}`;
+  const salaryMin = Number(raw?.salary_min ?? 0) || 0;
+  const salaryMax = Number(raw?.salary_max ?? 0) || 0;
+  const min = salaryMin >= 20000 && salaryMin <= 600000 ? salaryMin : 0;
+  const max = salaryMax >= 20000 && salaryMax <= 600000 ? salaryMax : min;
+  const level = inferLevel(title, min);
+  const tags = Array.isArray(raw?.tags) ? raw.tags.join(" ") : "";
+  return job({
+    id: `remoteok-${raw?.id ?? slug(`${title}-${company}`)}`,
+    title,
+    company,
+    location: String(raw?.location ?? "").trim() || "Remote",
+    remote: true,
+    level,
+    role_type: inferRoleType(`${title} ${tags}`),
+    salary_min: min,
+    salary_max: max,
+    description: truncate(stripHtml(String(raw?.description ?? "")), 200),
+    url,
+    source: "Remote OK",
+  });
+}
+
+export function normalizeRemotive(raw: any): LiveJob | null {
+  const title = String(raw?.title ?? "").trim();
+  const company = String(raw?.company_name ?? "").trim();
+  const url = String(raw?.url ?? "").trim();
+  if (!title || !company || !url || !isEngineeringRole(title)) return null;
+  const salary = parseSalaryString(String(raw?.salary ?? ""));
+  const level = inferLevel(title, salary.min);
+  const tags = Array.isArray(raw?.tags) ? raw.tags.join(" ") : "";
+  const location = String(raw?.candidate_required_location ?? "").trim();
+  return job({
+    id: `remotive-${raw?.id ?? slug(`${title}-${company}`)}`,
+    title,
+    company,
+    location: location || "Remote",
+    remote: inferRemote(location, true),
+    level,
+    role_type: inferRoleType(`${title} ${tags}`),
+    salary_min: salary.min,
+    salary_max: salary.max,
+    description: truncate(stripHtml(String(raw?.description ?? "")), 200),
+    url,
+    source: "Remotive",
+  });
+}
+
+/**
+ * "Who is hiring?" posts follow a pipe-delimited convention:
+ * Company | Role | Location | Remote/Onsite | Full-time | blurb + link
+ */
+export function parseHnPosting(commentText: string): Omit<LiveJob, "required" | "id" | "source" | "role_type" | "salary_min" | "salary_max"> | null {
+  const html = commentText || "";
+  const url = firstLink(html);
+  if (!url) return null;
+  const text = decodeEntities(html.replace(/<p>/gi, "\n").replace(/<a[^>]*>/gi, " ").replace(/<[^>]*>/g, ""));
+  const parts = text.split("|").map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 3) return null;
+  const [company, title] = parts;
+  if (!company || !title || company.length > 60 || title.length > 90) return null;
+  if (!isEngineeringRole(title)) return null;
+  const rest = parts.slice(2).join(" | ");
+  return {
+    title,
+    company,
+    location: parts[2] ?? "Remote",
+    remote: inferRemote(rest, false),
+    level: inferLevel(title),
+    description: truncate(stripHtml(rest), 200),
+    url,
+  };
+}
+
+export function normalizeHn(hit: any): LiveJob | null {
+  const parsed = parseHnPosting(String(hit?.comment_text ?? ""));
+  if (!parsed) return null;
+  return job({
+    ...parsed,
+    id: `hn-${hit?.objectID ?? slug(`${parsed.title}-${parsed.company}`)}`,
+    role_type: inferRoleType(`${parsed.title} ${parsed.description}`),
+    salary_min: 0,
+    salary_max: 0,
+    source: "HN Who's Hiring",
+  });
+}
+
+/** Same role cross-posted to several boards should appear once. */
+export function dedupeJobs(jobs: LiveJob[]): LiveJob[] {
+  const seen = new Set<string>();
+  const out: LiveJob[] = [];
+  for (const j of jobs) {
+    const key = `${j.title.toLowerCase()}|${j.company.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(j);
+  }
+  return out;
+}
