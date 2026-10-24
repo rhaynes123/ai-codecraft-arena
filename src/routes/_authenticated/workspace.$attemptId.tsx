@@ -95,64 +95,65 @@ function Workspace() {
     });
   }
 
-  async function runVisible() {
+  async function runVisible(source: "user" | "ai" = "user") {
     setBusy(true);
     const out = await runTests(files.filter((f) => !isTest(f.path)), files.filter((f) => isTest(f.path)));
     setBusy(false);
     setResults(out.results); setLogs(out.error ? [out.error, ...out.logs] : out.logs); setTab("tests");
     const passed = out.results.filter((r) => r.passed).length;
-    log("test_run", { passed, total: out.results.length });
-  }
-
-  async function doSubmit() {
-    setConfirmOpen(false);
-    setBusy(true);
-    setScoring(true);
-    try {
-      const h = await hidden({ data: { attemptId } });
-      const out = await runTests(files.filter((f) => !isTest(f.path)), [...files.filter((f) => isTest(f.path)), ...h.files.map((f) => ({ ...f, hidden: true }))]);
-      await save(files);
-            await submit({ data: { attemptId, files, results: out.results.map((r) => ({ ...r, error: r.error?.slice(0, 300) })) } });
-      qc.invalidateQueries();
-      navigate({ to: "/reports/$attemptId", params: { attemptId } });
-    } catch (e: any) {
-      toast.error(e.message ?? "Submit failed. Please try again.");
-    } finally { setBusy(false); setScoring(false); }
+    log("test_run", { passed, total: out.results.length, source });
+    return out;
   }
 
   const ctxFiles = files.filter((f) => attached.includes(f.path));
   const ctxChars = ctxFiles.reduce((a, f) => a + f.content.length + f.path.length, 0);
   const cost = creditCost(input.length + ctxChars);
 
-  async function send() {
-    if (!input.trim() || streaming) return;
-    const text = input.trim();
+  async function send(override?: string, depth = 0) {
+    const text = (override ?? input).trim();
+    if (!text || (streaming && !override)) return;
     const next: Msg[] = [...msgs, { role: "user", content: text }];
-    setMsgs([...next, { role: "assistant", content: "" }]); setInput(""); setStreaming(true);
-    log("prompt", { text: text.slice(0, 2000), chars: text.length, contextFiles: attached, contextChars: ctxChars });
+    if (override) msgsRef.current = next;
+    const base = override ? [...msgsRef.current] : next;
+    setMsgs([...base, { role: "assistant", content: "" }]); if (!override) setInput(""); setStreaming(true);
+    log("prompt", { text: text.slice(0, 2000), chars: text.length, contextFiles: attached, contextChars: ctxChars, auto: !!override });
+    let acc = "";
     try {
       const { data } = await supabase.auth.getSession();
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token}` },
-        body: JSON.stringify({ attemptId, messages: next, context: ctxFiles }),
+        body: JSON.stringify({ attemptId, messages: base, context: ctxFiles }),
       });
       if (!res.ok || !res.body) {
         const err = await res.json().catch(() => ({ error: "AI request failed" }));
         throw new Error(err.error);
       }
       qc.invalidateQueries({ queryKey: ["profile"] });
-      const reader = res.body.getReader(); const dec = new TextDecoder(); let acc = "";
+      const reader = res.body.getReader(); const dec = new TextDecoder();
       while (true) {
         const { done, value } = await reader.read(); if (done) break;
         acc += dec.decode(value, { stream: true });
-        setMsgs([...next, { role: "assistant", content: acc }]);
+        setMsgs([...base, { role: "assistant", content: acc }]);
       }
       if (!acc) throw new Error("The AI returned no answer. Please try again.");
       log("ai_response", { text: acc.slice(0, 3000), chars: acc.length, hasDiff: parseBlocks(acc).length > 0 });
     } catch (e: any) {
-      setMsgs(next); toast.error(e.message);
-    } finally { setStreaming(false); }
+      setMsgs(base); toast.error(e.message); setStreaming(false); return;
+    }
+    const after: Msg[] = [...base, { role: "assistant", content: acc }];
+    msgsRef.current = after;
+    if (acc.includes("[[run-tests]]") && depth < 2) {
+      const out = await runVisible("ai");
+      const p = out.results.filter((r) => r.passed).length;
+      const summary = `[test results] ${p}/${out.results.length} passed${out.error ? `\nError: ${out.error}` : ""}\n` +
+        out.results.map((r) => `${r.passed ? "PASS" : "FAIL"} ${r.name}${r.error ? ` — ${r.error.slice(0, 200)}` : ""}`).join("\n") +
+        (out.logs.length ? `\nConsole:\n${out.logs.slice(-20).join("\n").slice(0, 1500)}` : "");
+      setMsgs(after);
+      await send(summary, depth + 1);
+      return;
+    }
+    setStreaming(false);
   }
 
   function decide(key: string, path: string, content: string, apply: boolean) {

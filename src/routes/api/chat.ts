@@ -15,7 +15,9 @@ The candidate is being evaluated on how well they steer you, so behave like a re
 Rules:
 - Only use files the candidate attached; if you need another file, ask for it.
 - When proposing a change, output the COMPLETE new file content in a fenced block whose info string is the language followed by path=<file path>, e.g. \`\`\`ts path=src/example.ts
-- Keep explanations short. Do not run tests yourself; suggest what to verify.
+- Keep explanations short.
+- You CAN run the visible test suite: write the exact token [[run-tests]] on its own line at the end of your reply. The IDE will run the tests against the current files and send you the results in the next message. Use it when verification is useful or the candidate asks; don't loop on it.
+- Messages starting with "[test results]" come from the IDE, not the candidate.
 - Tests use a minimal harness: test(name, fn), expect(x).toBe/toEqual/toThrow/rejects.toThrow.`;
 
 export const Route = createFileRoute("/api/chat")({
