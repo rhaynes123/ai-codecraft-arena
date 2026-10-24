@@ -106,6 +106,22 @@ function Workspace() {
     return out;
   }
 
+  async function doSubmit() {
+    setConfirmOpen(false);
+    setBusy(true);
+    setScoring(true);
+    try {
+      const h = await hidden({ data: { attemptId } });
+      const out = await runTests(files.filter((f) => !isTest(f.path)), [...files.filter((f) => isTest(f.path)), ...h.files.map((f) => ({ ...f, hidden: true }))]);
+      await save(files);
+      await submit({ data: { attemptId, files, results: out.results.map((r) => ({ ...r, error: r.error?.slice(0, 300) })) } });
+      qc.invalidateQueries();
+      navigate({ to: "/reports/$attemptId", params: { attemptId } });
+    } catch (e: any) {
+      toast.error(e.message ?? "Submit failed. Please try again.");
+    } finally { setBusy(false); setScoring(false); }
+  }
+
   const ctxFiles = files.filter((f) => attached.includes(f.path));
   const ctxChars = ctxFiles.reduce((a, f) => a + f.content.length + f.path.length, 0);
   const cost = creditCost(input.length + ctxChars);
