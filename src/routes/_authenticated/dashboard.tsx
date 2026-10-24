@@ -2,10 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Coins, Flame, Trophy } from "lucide-react";
 import { AppHeader, useProfile } from "@/components/AppHeader";
-import { ScoreRadar, scoreTone } from "@/components/ScoreRadar";
+import { ScoreRadar, ScoreTrend, scoreTone } from "@/components/ScoreRadar";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +23,6 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
-const LINE_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)"];
 
 function Dashboard() {
   const qc = useQueryClient();
@@ -106,16 +104,7 @@ function Dashboard() {
           </Panel>
           <Panel title="Scores over time">
             {trend.length > 1 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={trend}>
-                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
-                  <XAxis dataKey="n" stroke="var(--muted-foreground)" fontSize={11} />
-                  <YAxis domain={[0, 100]} stroke="var(--muted-foreground)" fontSize={11} />
-                  <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", fontSize: 12 }} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  {DIMENSIONS.map((d, i) => <Line key={d.key} dataKey={d.key} name={d.short} stroke={LINE_COLORS[i]} strokeWidth={2} dot={false} />)}
-                </LineChart>
-              </ResponsiveContainer>
+              <ScoreTrend points={trend as any} />
             ) : <p className="py-16 text-center text-sm text-muted-foreground">Submit two or more challenges to see your trend.</p>}
           </Panel>
         </div>
