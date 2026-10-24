@@ -190,3 +190,13 @@ describe("parseHnPosting cleanup", () => {
     expect(parsed?.url).toBe("https://oscilar.com/careers");
   });
 });
+
+describe("parseHnPosting company cleanup", () => {
+  it("drops a bracketed bare domain from the company name", () => {
+    const parsed = parseHnPosting(
+      "Chronograph (chronograph.pe) | Platform Engineer | Remote | Full-time | We build things https://chronograph.pe/jobs",
+    );
+    expect(parsed?.company).toBe("Chronograph");
+    expect(parsed?.url).toBe("https://chronograph.pe/jobs");
+  });
+});
