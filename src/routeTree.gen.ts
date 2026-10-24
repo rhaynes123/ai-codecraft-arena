@@ -18,6 +18,7 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ChallengesIndexRouteImport } from './routes/challenges.index'
 import { Route as ChallengesSlugRouteImport } from './routes/challenges.$slug'
 import { Route as AuthenticatedReportsAttemptIdRouteImport } from './routes/_authenticated/reports.$attemptId'
+import { Route as AuthenticatedWorkspaceAttemptIdRouteImport } from './routes/_authenticated/workspace.$attemptId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,12 @@ const AuthenticatedReportsAttemptIdRoute =
     path: '/reports/$attemptId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedWorkspaceAttemptIdRoute =
+  AuthenticatedWorkspaceAttemptIdRouteImport.update({
+    id: '/workspace/$attemptId',
+    path: '/workspace/$attemptId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/challenges/$slug': typeof ChallengesSlugRoute
   '/challenges/': typeof ChallengesIndexRoute
   '/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
+  '/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -84,6 +92,7 @@ export interface FileRoutesByTo {
   '/challenges/$slug': typeof ChallengesSlugRoute
   '/challenges': typeof ChallengesIndexRoute
   '/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
+  '/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -96,6 +105,7 @@ export interface FileRoutesById {
   '/challenges/$slug': typeof ChallengesSlugRoute
   '/challenges/': typeof ChallengesIndexRoute
   '/_authenticated/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
+  '/_authenticated/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/challenges/$slug'
     | '/challenges/'
     | '/reports/$attemptId'
+    | '/workspace/$attemptId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/challenges/$slug'
     | '/challenges'
     | '/reports/$attemptId'
+    | '/workspace/$attemptId'
   id:
     | '__root__'
     | '/'
@@ -129,6 +141,7 @@ export interface FileRouteTypes {
     | '/challenges/$slug'
     | '/challenges/'
     | '/_authenticated/reports/$attemptId'
+    | '/_authenticated/workspace/$attemptId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsAttemptIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/workspace/$attemptId': {
+      id: '/_authenticated/workspace/$attemptId'
+      path: '/workspace/$attemptId'
+      fullPath: '/workspace/$attemptId'
+      preLoaderRoute: typeof AuthenticatedWorkspaceAttemptIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -212,12 +232,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
   AuthenticatedReportsAttemptIdRoute: typeof AuthenticatedReportsAttemptIdRoute
+  AuthenticatedWorkspaceAttemptIdRoute: typeof AuthenticatedWorkspaceAttemptIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedJobsRoute: AuthenticatedJobsRoute,
   AuthenticatedReportsAttemptIdRoute: AuthenticatedReportsAttemptIdRoute,
+  AuthenticatedWorkspaceAttemptIdRoute: AuthenticatedWorkspaceAttemptIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
