@@ -178,14 +178,15 @@ describe("parseHnPosting cleanup", () => {
     expect(parsed?.location).toBe("Remote");
     expect(parsed?.remote).toBe(true);
     expect(parsed?.description).not.toMatch(/https?:\/\//);
-    expect(parsed?.url).toBe("https://sendery.co/careers");
+    expect(parsed?.url).toBe("https://sendery.co");
   });
 
   it("falls back when the location field holds a whole paragraph", () => {
     const parsed = parseHnPosting(
-      "Oscilar.com | Sr/Staff Software Engineers, Data Scientist, FDE, PM | REMOTE (US/Canada/Brazil/Poland/UK/India) Full-time AI Risk Decisioning platform that helps organizations manage risk | Full-time | We build things",
+      "Oscilar.com | Sr/Staff Software Engineers, Data Scientist, FDE, PM | REMOTE (US/Canada/Brazil/Poland/UK/India) Full-time AI Risk Decisioning platform that helps organizations manage risk | Full-time | We build things https://oscilar.com/careers",
     );
     expect(parsed?.location).toBe("See posting");
     expect(parsed?.description).toBe("We build things");
+    expect(parsed?.url).toBe("https://oscilar.com/careers");
   });
 });
