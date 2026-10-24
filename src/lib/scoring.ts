@@ -158,5 +158,5 @@ export function practiceStreak(dates: string[], today = new Date()): number {
 
 export function formatSalary(min: number, max: number) {
   const k = (n: number) => `$${Math.round(n / 1000)}k`;
-  return `${k(min)} – ${k(max)}`;
+  return max && max !== min ? `${k(min)} – ${k(max)}` : k(min);
 }

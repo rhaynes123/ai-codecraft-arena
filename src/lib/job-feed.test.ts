@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  stripHtml,
   dedupeJobs,
+  fixMojibake,
+  isEngineeringRole,
+  roleTypeFor,
   inferLevel,
   inferRemote,
   inferRoleType,
@@ -148,5 +152,75 @@ describe("requiredForLevel", () => {
   it("sets dimension bars that rise with the level", () => {
     expect(requiredForLevel(3)).toEqual({ verification: 55, economy: 55, steering: 55, correctness: 65 });
     expect(requiredForLevel(5).verification).toBeGreaterThan(requiredForLevel(1).verification!);
+  });
+});
+
+describe("fixMojibake", () => {
+  it("repairs double-encoded characters from the feeds", () => {
+    expect(fixMojibake("Sotheby\u00e2\u0080\u0099s")).toBe("Sotheby\u2019s");
+    expect(fixMojibake("Sotheby's")).toBe("Sotheby's");
+    expect(fixMojibake("Café")).toBe("Café");
+  });
+
+  it("keeps a real apostrophe in a company name", () => {
+    const job = normalizeRemoteok({
+      position: "Senior Software Engineer",
+      company: "Sotheby\u00e2\u0080\u0099s",
+      url: "https://remoteok.com/remote-jobs/remote-senior-software-engineer-sothebys-1137545",
+    });
+    expect(job?.company).toBe("Sotheby\u2019s");
+  });
+});
+
+describe("parseHnPosting cleanup", () => {
+  it("keeps the company site out of the company name and the blurb", () => {
+    const parsed = parseHnPosting(
+      "Sendery ( https://sendery.co) | iOS Engineer | Remote | Full-time | Build our app. More at https://sendery.co/careers",
+    );
+    expect(parsed?.company).toBe("Sendery");
+    expect(parsed?.location).toBe("Remote");
+    expect(parsed?.remote).toBe(true);
+    expect(parsed?.description).not.toMatch(/https?:\/\//);
+    expect(parsed?.url).toBe("https://sendery.co");
+  });
+
+  it("falls back when the location field holds a whole paragraph", () => {
+    const parsed = parseHnPosting(
+      "Oscilar.com | Sr/Staff Software Engineers, Data Scientist, FDE, PM | REMOTE (US/Canada/Brazil/Poland/UK/India) Full-time AI Risk Decisioning platform that helps organizations manage risk | Full-time | We build things https://oscilar.com/careers",
+    );
+    expect(parsed?.location).toBe("See posting");
+    expect(parsed?.description).toBe("We build things");
+    expect(parsed?.url).toBe("https://oscilar.com/careers");
+  });
+});
+
+describe("parseHnPosting company cleanup", () => {
+  it("drops a bracketed bare domain from the company name", () => {
+    const parsed = parseHnPosting(
+      "Chronograph (chronograph.pe) | Platform Engineer | Remote | Full-time | We build things https://chronograph.pe/jobs",
+    );
+    expect(parsed?.company).toBe("Chronograph");
+    expect(parsed?.url).toBe("https://chronograph.pe/jobs");
+  });
+});
+
+describe("isEngineeringRole", () => {
+  it("keeps engineering titles and drops support titles that borrow the word", () => {
+    expect(isEngineeringRole("Senior Backend Engineer")).toBe(true);
+    expect(isEngineeringRole("Tier III Service Desk Engineer")).toBe(false);
+    expect(isEngineeringRole("Sales Development Representative")).toBe(false);
+  });
+});
+
+describe("roleTypeFor", () => {
+  it("trusts the posting title over the tag soup", () => {
+    expect(roleTypeFor("Senior Frontend Engineer", "react,backend,design,game dev")).toBe("frontend");
+    expect(roleTypeFor("Software Engineer", "backend,python")).toBe("backend");
+    expect(roleTypeFor("Senior React Full-stack Developer", "react")).toBe("full-stack");
+    expect(roleTypeFor("Site Reliability Engineer", "react")).toBe("platform");
+  });
+
+  it("does not leave a space before punctuation when markup is stripped", () => {
+    expect(stripHtml("As a Principal Engineer <b>,</b> you will ship")).toBe("As a Principal Engineer, you will ship");
   });
 });

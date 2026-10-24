@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { summarizeReports, useMyReports } from "@/lib/queries";
 import { DIMENSIONS, LEVELS, formatSalary, jobAccess, jobMatch, type Scores } from "@/lib/scoring";
-import type { LiveJob } from "@/lib/job-feed";
+import { truncate, type LiveJob } from "@/lib/job-feed";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/jobs")({
@@ -46,6 +46,9 @@ function Jobs() {
       (!remoteOnly || j.remote) &&
       (!minSalary || (j.salary_max || j.salary_min) >= minSalary),
   );
+  // Show how many live openings sit behind each filter so a chip that matches nothing is obvious.
+  const counts: Record<string, number> = { all: (jobs.data ?? []).length };
+  for (const j of jobs.data ?? []) counts[j.role_type] = (counts[j.role_type] ?? 0) + 1;
   const chip = (a: boolean) => cn("rounded-sm border px-2.5 py-1 font-mono text-xs", a ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent");
 
   return (
@@ -65,7 +68,9 @@ function Jobs() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
-          {["all", "frontend", "backend", "full-stack", "platform"].map((r) => <button key={r} className={chip(role === r)} onClick={() => setRole(r)}>{r}</button>)}
+          {["all", "frontend", "backend", "full-stack", "platform"].map((r) => (
+            <button key={r} className={cn(chip(role === r), !(counts[r] ?? 0) && "opacity-40")} onClick={() => setRole(r)}>{r} · {counts[r] ?? 0}</button>
+          ))}
           <span className="mx-2 h-5 w-px bg-border" />
           {[0, 120000, 180000, 250000].map((s) => <button key={s} className={chip(minSalary === s)} onClick={() => setMinSalary(s)}>{s ? `$${s / 1000}k+` : "any salary"}</button>)}
           <div className="ml-auto flex items-center gap-2"><Switch id="remote" checked={remoteOnly} onCheckedChange={setRemoteOnly} /><Label htmlFor="remote" className="text-sm">Remote only</Label></div>
@@ -132,7 +137,7 @@ function JobCard({ job, access, mine }: { job: LiveJob; access: string; mine: Sc
         {locked ? <Lock className="h-4 w-4 text-muted-foreground" /> : <span className={cn("font-mono text-sm font-bold", match >= 85 ? "text-success" : match >= 60 ? "text-warning" : "text-muted-foreground")}>{match}%</span>}
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{job.location}</span>
+        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{truncate(job.location, 42)}</span>
         <Badge variant="secondary" className="font-mono text-[10px]">{job.role_type}</Badge>
         <Badge variant="outline" className="font-mono text-[10px]">{job.source}</Badge>
       </div>
