@@ -208,7 +208,30 @@ function Workspace() {
         </div>
       </header>
       <ResizablePanelGroup orientation="horizontal" className="flex-1">
-        <ResizablePanel defaultSize="16%" minSize="10%">
+        <ResizablePanel defaultSize="40%" minSize="25%">
+          <div className="flex h-full flex-col bg-background">
+            <div className="border-b px-3 py-2 font-mono text-xs text-muted-foreground">AI pair · attached: {attached.length} files</div>
+            <div className="flex-1 space-y-4 overflow-auto p-3">
+              {!msgs.length && <p className="text-sm text-muted-foreground">Ask the AI to explain code, draft a fix, or debug a failing test. Attach files with the clip icon. You're scored on how you verify and steer its output.</p>}
+              {msgs.map((m, i) => (
+                <div key={i} className={cn("text-sm", m.role === "user" && "rounded-md bg-secondary p-2.5")}>
+                  {m.role === "assistant" ? <AssistantMessage text={m.content} idx={i} decided={decided} onDecide={decide} /> : <p className="whitespace-pre-wrap">{m.content}</p>}
+                </div>
+              ))}
+              {streaming && <p className="font-mono text-xs text-primary">thinking…</p>}
+            </div>
+            <div className="border-t p-2">
+              <Textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask your AI pair…" rows={3}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
+              <div className="mt-2 flex items-center justify-between">
+                <span className="font-mono text-[11px] text-muted-foreground">{input ? `costs ${cost} credit${cost > 1 ? "s" : ""}` : "Enter to send · Shift+Enter for new line"}</span>
+                <Button size="sm" onClick={send} disabled={streaming || !input.trim()}><Send className="h-3.5 w-3.5" /></Button>
+              </div>
+            </div>
+          </div>
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel defaultSize="14%" minSize="10%">
           <div className="h-full overflow-auto p-2">
             <p className="px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Explorer</p>
             {files.map((f) => (
@@ -222,7 +245,7 @@ function Workspace() {
           </div>
         </ResizablePanel>
         <ResizableHandle />
-        <ResizablePanel defaultSize="54%">
+        <ResizablePanel defaultSize="46%" minSize="25%">
           <ResizablePanelGroup orientation="vertical">
             <ResizablePanel defaultSize="65%">
               <div className="flex h-8 items-center border-b bg-background px-3 font-mono text-xs text-muted-foreground">{active}</div>
@@ -269,29 +292,6 @@ function Workspace() {
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize="30%" minSize="20%">
-          <div className="flex h-full flex-col bg-background">
-            <div className="border-b px-3 py-2 font-mono text-xs text-muted-foreground">AI pair · attached: {attached.length} files</div>
-            <div className="flex-1 space-y-4 overflow-auto p-3">
-              {!msgs.length && <p className="text-sm text-muted-foreground">Ask the AI to explain code, draft a fix, or debug a failing test. Attach files with the clip icon. You're scored on how you verify and steer its output.</p>}
-              {msgs.map((m, i) => (
-                <div key={i} className={cn("text-sm", m.role === "user" && "rounded-md bg-secondary p-2.5")}>
-                  {m.role === "assistant" ? <AssistantMessage text={m.content} idx={i} decided={decided} onDecide={decide} /> : <p className="whitespace-pre-wrap">{m.content}</p>}
-                </div>
-              ))}
-              {streaming && <p className="font-mono text-xs text-primary">thinking…</p>}
-            </div>
-            <div className="border-t p-2">
-              <Textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask your AI pair…" rows={3}
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
-              <div className="mt-2 flex items-center justify-between">
-                <span className="font-mono text-[11px] text-muted-foreground">{input ? `costs ${cost} credit${cost > 1 ? "s" : ""}` : "Enter to send · Shift+Enter for new line"}</span>
-                <Button size="sm" onClick={send} disabled={streaming || !input.trim()}><Send className="h-3.5 w-3.5" /></Button>
-              </div>
-            </div>
-          </div>
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
