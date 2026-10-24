@@ -10,33 +10,147 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ChallengesIndexRouteImport } from './routes/challenges.index'
+import { Route as ChallengesSlugRouteImport } from './routes/challenges.$slug'
+import { Route as AuthenticatedReportsAttemptIdRouteImport } from './routes/_authenticated/reports.$attemptId'
+import { Route as AuthenticatedWorkspaceAttemptIdRouteImport } from './routes/_authenticated/workspace.$attemptId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedJobsRoute = AuthenticatedJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChallengesIndexRoute = ChallengesIndexRouteImport.update({
+  id: '/challenges/',
+  path: '/challenges/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChallengesSlugRoute = ChallengesSlugRouteImport.update({
+  id: '/challenges/$slug',
+  path: '/challenges/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedReportsAttemptIdRoute =
+  AuthenticatedReportsAttemptIdRouteImport.update({
+    id: '/reports/$attemptId',
+    path: '/reports/$attemptId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWorkspaceAttemptIdRoute =
+  AuthenticatedWorkspaceAttemptIdRouteImport.update({
+    id: '/workspace/$attemptId',
+    path: '/workspace/$attemptId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/jobs': typeof AuthenticatedJobsRoute
+  '/api/chat': typeof ApiChatRoute
+  '/challenges/$slug': typeof ChallengesSlugRoute
+  '/challenges/': typeof ChallengesIndexRoute
+  '/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
+  '/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/jobs': typeof AuthenticatedJobsRoute
+  '/api/chat': typeof ApiChatRoute
+  '/challenges/$slug': typeof ChallengesSlugRoute
+  '/challenges': typeof ChallengesIndexRoute
+  '/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
+  '/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/jobs': typeof AuthenticatedJobsRoute
+  '/api/chat': typeof ApiChatRoute
+  '/challenges/$slug': typeof ChallengesSlugRoute
+  '/challenges/': typeof ChallengesIndexRoute
+  '/_authenticated/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
+  '/_authenticated/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/jobs'
+    | '/api/chat'
+    | '/challenges/$slug'
+    | '/challenges/'
+    | '/reports/$attemptId'
+    | '/workspace/$attemptId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/jobs'
+    | '/api/chat'
+    | '/challenges/$slug'
+    | '/challenges'
+    | '/reports/$attemptId'
+    | '/workspace/$attemptId'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/jobs'
+    | '/api/chat'
+    | '/challenges/$slug'
+    | '/challenges/'
+    | '/_authenticated/reports/$attemptId'
+    | '/_authenticated/workspace/$attemptId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ApiChatRoute: typeof ApiChatRoute
+  ChallengesSlugRoute: typeof ChallengesSlugRoute
+  ChallengesIndexRoute: typeof ChallengesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +162,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/jobs': {
+      id: '/_authenticated/jobs'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof AuthenticatedJobsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/challenges/': {
+      id: '/challenges/'
+      path: '/challenges'
+      fullPath: '/challenges/'
+      preLoaderRoute: typeof ChallengesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/challenges/$slug': {
+      id: '/challenges/$slug'
+      path: '/challenges/$slug'
+      fullPath: '/challenges/$slug'
+      preLoaderRoute: typeof ChallengesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/reports/$attemptId': {
+      id: '/_authenticated/reports/$attemptId'
+      path: '/reports/$attemptId'
+      fullPath: '/reports/$attemptId'
+      preLoaderRoute: typeof AuthenticatedReportsAttemptIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/workspace/$attemptId': {
+      id: '/_authenticated/workspace/$attemptId'
+      path: '/workspace/$attemptId'
+      fullPath: '/workspace/$attemptId'
+      preLoaderRoute: typeof AuthenticatedWorkspaceAttemptIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
+  AuthenticatedReportsAttemptIdRoute: typeof AuthenticatedReportsAttemptIdRoute
+  AuthenticatedWorkspaceAttemptIdRoute: typeof AuthenticatedWorkspaceAttemptIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedJobsRoute: AuthenticatedJobsRoute,
+  AuthenticatedReportsAttemptIdRoute: AuthenticatedReportsAttemptIdRoute,
+  AuthenticatedWorkspaceAttemptIdRoute: AuthenticatedWorkspaceAttemptIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ApiChatRoute: ApiChatRoute,
+  ChallengesSlugRoute: ChallengesSlugRoute,
+  ChallengesIndexRoute: ChallengesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
