@@ -205,6 +205,7 @@ export type Database = {
           display_name: string | null
           id: string
           last_daily_claim: string | null
+          region: string | null
         }
         Insert: {
           created_at?: string
@@ -212,6 +213,7 @@ export type Database = {
           display_name?: string | null
           id: string
           last_daily_claim?: string | null
+          region?: string | null
         }
         Update: {
           created_at?: string
@@ -219,6 +221,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           last_daily_claim?: string | null
+          region?: string | null
         }
         Relationships: []
       }
@@ -326,6 +329,7 @@ export type Database = {
     }
     Functions: {
       claim_daily_credits: { Args: never; Returns: number }
+      set_region: { Args: { _region: string }; Returns: string }
       spend_credits: {
         Args: { _amount: number; _reason: string }
         Returns: number
