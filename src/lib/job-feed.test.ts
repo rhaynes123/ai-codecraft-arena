@@ -122,7 +122,8 @@ describe("parseHnPosting", () => {
   it("keeps the level and source when normalized", () => {
     const job = normalizeHn({ objectID: "123", comment_text: sample });
     expect(job?.source).toBe("HN Who's Hiring");
-    expect(job?.level).toBe(3);
+    // The post names no seniority, so it lands at the default mid-level bar.
+    expect(job?.level).toBe(2);
     expect(job?.salary_min).toBe(0);
   });
 });
