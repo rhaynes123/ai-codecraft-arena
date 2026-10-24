@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   stripHtml,
   dedupeJobs,
+  isDetroitMetro,
+  hiresInUs,
   fixMojibake,
   isEngineeringRole,
   roleTypeFor,
@@ -222,5 +224,28 @@ describe("roleTypeFor", () => {
 
   it("does not leave a space before punctuation when markup is stripped", () => {
     expect(stripHtml("As a Principal Engineer <b>,</b> you will ship")).toBe("As a Principal Engineer, you will ship");
+  });
+});
+
+describe("isDetroitMetro", () => {
+  it("counts metro cities and Michigan", () => {
+    expect(isDetroitMetro("Detroit, MI")).toBe(true);
+    expect(isDetroitMetro("Ann Arbor")).toBe(true);
+    expect(isDetroitMetro("Troy, Michigan (Hybrid)")).toBe(true);
+    expect(isDetroitMetro("Lansing, MI")).toBe(true);
+  });
+  it("ignores look-alikes", () => {
+    expect(isDetroitMetro("Miami, FL")).toBe(false);
+    expect(isDetroitMetro("Milan, Italy")).toBe(false);
+    expect(isDetroitMetro("Remote (mid-level)")).toBe(false);
+  });
+  it("only trusts unambiguous names in the blurb", () => {
+    expect(isDetroitMetro("See posting", "Our office is in downtown Detroit")).toBe(true);
+    expect(isDetroitMetro("Remote", "Contact Sarah Warren")).toBe(false);
+  });
+  it("flags remote roles open to US applicants", () => {
+    expect(hiresInUs({ location: "USA", remote: true })).toBe(true);
+    expect(hiresInUs({ location: "Europe only", remote: true })).toBe(false);
+    expect(hiresInUs({ location: "USA", remote: false })).toBe(false);
   });
 });

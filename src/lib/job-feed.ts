@@ -17,6 +17,8 @@ export type LiveJob = {
   description: string;
   url: string;
   source: string;
+  /** Posting is in Detroit Metro / Michigan. */
+  local: boolean;
 };
 
 const ENGINEERING_ROLE =
@@ -135,8 +137,28 @@ function slug(text: string) {
   return (text || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 }
 
-function job(partial: Omit<LiveJob, "required"> & { required?: Partial<Scores> }): LiveJob {
-  return { ...partial, required: partial.required ?? requiredForLevel(partial.level) };
+const METRO_CITIES =
+  /\b(detroit|ann arbor|dearborn|troy|southfield|novi|royal oak|farmington hills|auburn hills|pontiac|livonia|warren|grand rapids|michigan)\b/i;
+const METRO_IN_TEXT = /\b(detroit|ann arbor|michigan)\b/i;
+
+/** Detroit Metro / Michigan posting. City names count only in the location; the blurb needs an unambiguous name. */
+export function isDetroitMetro(location: string, text = "") {
+  const loc = location || "";
+  // "MI" is matched case-sensitively so "Miami" or "mid-level" never qualify.
+  return METRO_CITIES.test(loc) || /(^|[\s,(])MI\b/.test(loc) || METRO_IN_TEXT.test(text || "");
+}
+
+/** Remote roles open to US-based people, which Michigan engineers can apply to. */
+export function hiresInUs(job: Pick<LiveJob, "location" | "remote">) {
+  return job.remote && /\b(us|usa|united states|north america|americas|worldwide|anywhere)\b/i.test(job.location || "");
+}
+
+function job(partial: Omit<LiveJob, "required" | "local"> & { required?: Partial<Scores> }): LiveJob {
+  return {
+    ...partial,
+    required: partial.required ?? requiredForLevel(partial.level),
+    local: isDetroitMetro(partial.location, `${partial.title} ${partial.description}`),
+  };
 }
 
 export function normalizeRemoteok(raw: any): LiveJob | null {
@@ -212,7 +234,7 @@ const POSTING_META = /^(remote|onsite|on-site|hybrid|full[- ]?time|part[- ]?time
 
 export function parseHnPosting(
   commentText: string,
-): Omit<LiveJob, "required" | "id" | "source" | "role_type" | "salary_min" | "salary_max"> | null {
+): Omit<LiveJob, "required" | "id" | "source" | "role_type" | "salary_min" | "salary_max" | "local"> | null {
   const html = commentText || "";
   const url = firstLink(html);
   if (!url) return null;

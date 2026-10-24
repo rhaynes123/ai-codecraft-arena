@@ -7,8 +7,10 @@ import { AppHeader, useProfile } from "@/components/AppHeader";
 import { ScoreRadar, ScoreTrend, scoreTone } from "@/components/ScoreRadar";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { summarizeReports, useMyReports } from "@/lib/queries";
+import { summarizeReports, useChallenges, useMyReports } from "@/lib/queries";
 import { DIMENSIONS, practiceStreak } from "@/lib/scoring";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -47,6 +49,16 @@ function Dashboard() {
     });
   }, [qc]);
 
+  const challenges = useChallenges();
+  const inDetroit = (profile.data as any)?.region === "detroit";
+  async function toggleDetroit(on: boolean) {
+    const { error } = await supabase.rpc("set_region", { _region: on ? "detroit" : (null as any) });
+    if (error) { toast.error("Couldn't save that setting. Try again."); return; }
+    qc.invalidateQueries({ queryKey: ["profile"] });
+  }
+  const done = new Set((reports.data ?? []).map((r) => r.challenges?.slug));
+  const localPicks = (challenges.data ?? []).filter((c) => c.tags.includes("Detroit") && !done.has(c.slug));
+
   const list = reports.data ?? [];
   const sum = summarizeReports(list);
   const streak = practiceStreak(list.map((r) => r.created_at));
@@ -61,8 +73,28 @@ function Dashboard() {
             <p className="font-mono text-xs text-muted-foreground">welcome back</p>
             <h1 className="text-3xl font-bold">{profile.data?.display_name ?? "Engineer"}</h1>
           </div>
-          <Button asChild><Link to="/challenges">Start a challenge</Link></Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch id="detroit" checked={inDetroit} onCheckedChange={toggleDetroit} />
+              <Label htmlFor="detroit" className="text-sm">I'm in Detroit Metro</Label>
+            </div>
+            <Button asChild><Link to="/challenges">Start a challenge</Link></Button>
+          </div>
         </div>
+
+        {inDetroit && localPicks.length > 0 && (
+          <section className="rounded-lg border bg-card p-5">
+            <h2 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">suggested for Detroit Metro</h2>
+            <div className="grid gap-3 md:grid-cols-3">
+              {localPicks.map((c) => (
+                <Link key={c.id} to="/challenges/$slug" params={{ slug: c.slug }} className="rounded-md border p-4 transition-colors hover:border-primary">
+                  <div className="font-mono text-xs text-muted-foreground">{c.category} · {c.difficulty}</div>
+                  <div className="mt-1 font-semibold">{c.title}</div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="grid gap-4 md:grid-cols-4">
           <Stat icon={<Trophy className="h-4 w-4 text-primary" />} label="Level">

@@ -25,7 +25,10 @@ function Catalog() {
   const [diff, setDiff] = useState("All");
   const [cat, setCat] = useState("All");
   const cats = useMemo(() => ["All", ...new Set((data ?? []).map((c) => c.category))], [data]);
-  const list = (data ?? []).filter((c) => (diff === "All" || c.difficulty === diff) && (cat === "All" || c.category === cat));
+  const [detroit, setDetroit] = useState(false);
+  const list = (data ?? []).filter(
+    (c) => (diff === "All" || c.difficulty === diff) && (cat === "All" || c.category === cat) && (!detroit || c.tags.includes("Detroit")),
+  );
   const chip = (active: boolean) => cn("rounded-sm border px-2.5 py-1 font-mono text-xs transition-colors", active ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent");
 
   return (
@@ -38,6 +41,8 @@ function Catalog() {
           {["All", "Easy", "Medium", "Hard"].map((d) => <button key={d} className={chip(diff === d)} onClick={() => setDiff(d)}>{d}</button>)}
           <span className="mx-2 w-px bg-border" />
           {cats.map((c) => <button key={c} className={chip(cat === c)} onClick={() => setCat(c)}>{c}</button>)}
+          <span className="mx-2 w-px bg-border" />
+          <button className={chip(detroit)} onClick={() => setDetroit((d) => !d)}>Detroit industries</button>
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {isLoading && Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-44 animate-pulse rounded-lg border bg-card" />)}
