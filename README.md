@@ -8,7 +8,7 @@ Key Product Features & Architecture:
 1. Workspace / IDE Interface:
    - Split-pane layout with a file explorer, multi-file code editor (Monaco or syntax-highlighted code editor), browser test runner / output console, and an integrated AI pair-programming chat pane.
    - Live AI Assistant interface in the side pane where candidates ask questions, request diffs, draft implementations, or debug with an AI companion.
-   
+
 2. Exercise Catalog (Real-World Repo Challenges):
    - Curated real-world challenge repository (e.g. refactoring legacy async services, resolving tricky concurrency/race condition bugs, migrating API contracts, resolving tricky state machine edge cases).
    - Each challenge includes problem description, acceptance criteria, starter files/codebase, hidden/visible test suites, and hints.
@@ -23,14 +23,17 @@ Key Product Features & Architecture:
      * Steering & Iteration Velocity (course-correcting when AI hallucinates or produces flawed code)
      * Solution Correctness & Code Quality (test pass rate, readability)
    - Comprehensive feedback report with radar chart, detailed breakdown, and actionable coaching tips on AI-assisted engineering practices.
+   - Dedicated `/measures` detail pages explaining each scored skill, linked from the home page, dashboard and reports.
 
 5. User Hub & Credit System:
    - Dashboard with user practice streaks, AI Proficiency radar scores over time, challenge history, and credit balance tracking for live AI queries.
+   - Level-based job recommendations: your engineer level unlocks matching openings from live public job feeds (Remote OK, Remotive, Hacker News "Who is hiring"), each linked to the original posting, with a Detroit Metro filter and US-remote fallback.
+   - Detroit-area training directory with real bootcamps and local technology training programs, linked to their official sources.
    - Clean, dark-mode focused, modern developer-centric UI (Tailwind CSS, shadcn/ui).
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://ai-codecraft-arena.lovable.app
+**Live app**: https://steer10x.lovable.app
 
 ## Build with Lovable
 
