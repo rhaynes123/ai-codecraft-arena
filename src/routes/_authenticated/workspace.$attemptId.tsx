@@ -226,7 +226,7 @@ function Workspace() {
         </div>
       </header>
       <ResizablePanelGroup orientation="horizontal" className="flex-1">
-        <ResizablePanel defaultSize="54%" minSize="35%">
+        <ResizablePanel defaultSize="53%" minSize="35%">
           <div className="flex h-full flex-col bg-background">
             <div className="border-b px-3 py-2 font-mono text-xs text-muted-foreground">AI pair · attached: {attached.length} files</div>
             <div className="flex-1 space-y-4 overflow-auto p-3">
@@ -249,7 +249,7 @@ function Workspace() {
           </div>
         </ResizablePanel>
         <ResizableHandle />
-        <ResizablePanel defaultSize="11%" minSize="9%">
+        <ResizablePanel defaultSize="12%" minSize="9%">
           <div className="h-full overflow-auto p-2">
             <p className="px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Explorer</p>
             {files.map((f) => (
