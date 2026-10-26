@@ -11,11 +11,11 @@ import { DIMENSIONS, engineerRating, levelFor } from "@/lib/scoring";
 export const Route = createFileRoute("/_authenticated/reports/$attemptId")({
   head: () => ({
     meta: [
-      { title: "Feedback report — Steer" },
+      { title: "Feedback report — Steer10x" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Your AI proficiency breakdown, evidence and coaching tips." },
-      { property: "og:title", content: "Feedback report — Steer" },
+      { property: "og:title", content: "Feedback report — Steer10x" },
       { property: "og:description", content: "AI proficiency breakdown and coaching tips." },
     ],
   }),

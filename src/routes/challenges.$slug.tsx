@@ -11,11 +11,11 @@ import { useSessionUser } from "@/hooks/use-session";
 export const Route = createFileRoute("/challenges/$slug")({
   head: () => ({
     meta: [
-      { title: "Challenge brief — Steer" },
+      { title: "Challenge brief — Steer10x" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Read the brief and acceptance criteria, then start the challenge in the AI-paired IDE." },
-      { property: "og:title", content: "Challenge brief — Steer" },
+      { property: "og:title", content: "Challenge brief — Steer10x" },
       { property: "og:description", content: "A real-world repo challenge for AI-assisted engineers." },
     ],
   }),

@@ -23,11 +23,11 @@ const Editor = lazy(() => import("@monaco-editor/react"));
 export const Route = createFileRoute("/_authenticated/workspace/$attemptId")({
   head: () => ({
     meta: [
-      { title: "Workspace — Steer" },
+      { title: "Workspace — Steer10x" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "AI-paired coding workspace." },
-      { property: "og:title", content: "Workspace — Steer" },
+      { property: "og:title", content: "Workspace — Steer10x" },
       { property: "og:description", content: "AI-paired coding workspace." },
     ],
   }),

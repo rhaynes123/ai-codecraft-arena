@@ -10,11 +10,11 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/challenges/")({
   head: () => ({
     meta: [
-      { title: "Challenge catalog — Steer" },
+      { title: "Challenge catalog — Steer10x" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Real-world repo challenges: async refactors, race conditions, API migrations and state machine edge cases." },
-      { property: "og:title", content: "Challenge catalog — Steer" },
+      { property: "og:title", content: "Challenge catalog — Steer10x" },
       { property: "og:description", content: "Real-world repo challenges for AI-assisted engineers." },
     ],
   }),

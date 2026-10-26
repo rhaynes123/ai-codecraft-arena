@@ -16,11 +16,11 @@ import { DIMENSIONS, practiceStreak } from "@/lib/scoring";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Steer" },
+      { title: "Dashboard — Steer10x" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Your AI proficiency scores, level, streak and credits." },
-      { property: "og:title", content: "Dashboard — Steer" },
+      { property: "og:title", content: "Dashboard — Steer10x" },
       { property: "og:description", content: "Track your AI-assisted engineering progress." },
     ],
   }),

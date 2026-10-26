@@ -15,11 +15,11 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): { redirect?: string } => (typeof s["redirect"] === "string" ? { redirect: s["redirect"] } : {}),
   head: () => ({
     meta: [
-      { title: "Sign in — Steer" },
+      { title: "Sign in — Steer10x" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Sign in to practice AI-assisted engineering interviews." },
-      { property: "og:title", content: "Sign in — Steer" },
+      { property: "og:title", content: "Sign in — Steer10x" },
       { property: "og:description", content: "Sign in to practice AI-assisted engineering interviews." },
     ],
   }),

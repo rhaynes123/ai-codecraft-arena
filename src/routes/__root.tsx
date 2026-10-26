@@ -67,7 +67,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Steer — AI-era engineering interview prep" },
+      { title: "Steer10x — AI-era engineering interview prep" },
       { name: "description", content: "Practice real-world coding challenges with an AI pair programmer and get scored on how well you steer it." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
