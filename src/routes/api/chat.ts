@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { streamText, type ModelMessage } from "ai";
 import { createGateway, reasoningOptions } from "@/lib/ai.server";
+import { CHAT_MODEL } from "@/lib/ai-models";
 import { userClientFromRequest } from "@/lib/supabase-user.server";
 import { creditCost } from "@/lib/scoring";
 
@@ -40,7 +41,8 @@ export const Route = createFileRoute("/api/chat")({
           return Response.json({ error: "This attempt is already submitted." }, { status: 400 });
         }
 
-        const last = body.messages[body.messages.length - 1]!;
+        const last = body.messages[body.messages.length - 1];
+        if (!last) return Response.json({ error: "Invalid request" }, { status: 400 });
         const context = (body.context ?? []).slice(0, 10);
         const contextText = context.map((f) => `--- ${f.path} ---\n${f.content}`).join("\n\n");
         const cost = creditCost(last.content.length + contextText.length);
@@ -55,7 +57,7 @@ export const Route = createFileRoute("/api/chat")({
               : m.content,
         }));
         const challenge = attempt.challenges as { title: string; description: string } | null;
-        const gateway = createGateway(request);
+        const gateway = createGateway(CHAT_MODEL, request);
         const result = streamText({
           model: gateway.model as any,
           instructions: `${INSTRUCTIONS}\n\nCurrent challenge: ${challenge?.title}\n${challenge?.description}`,

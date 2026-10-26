@@ -17,6 +17,7 @@ import { runTests, type TestResult, type VFile } from "@/lib/test-runner";
 import { creditCost } from "@/lib/scoring";
 import { getHiddenTests, submitAttempt } from "@/lib/attempts.functions";
 import { cn } from "@/lib/utils";
+import { isVisibleTest, selectAIContext } from "@/lib/ai-context";
 
 const Editor = lazy(() => import("@monaco-editor/react"));
 
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/workspace/$attemptId")({
 });
 
 type Msg = { role: "user" | "assistant"; content: string };
-const isTest = (p: string) => p.startsWith("tests/");
+const isTest = isVisibleTest;
 
 function parseBlocks(text: string) {
   const re = /```[a-zA-Z]*\s+path=([^\s`]+)\n([\s\S]*?)```/g;
@@ -79,7 +80,7 @@ function Workspace() {
     const f = attempt.files as VFile[];
     setFiles(f);
     setActive(f[0]?.path ?? "");
-    setAttached(f[0] ? [f[0].path] : []);
+    setAttached([]);
     setHints(attempt.hints_used);
   }, [attempt?.id]);
 
@@ -124,7 +125,7 @@ function Workspace() {
     } finally { setBusy(false); setScoring(false); }
   }
 
-  const ctxFiles = files.filter((f) => attached.includes(f.path));
+  const ctxFiles = selectAIContext(files, active, attached).slice(0, 10);
   const ctxChars = ctxFiles.reduce((a, f) => a + f.content.length + f.path.length, 0);
   const cost = creditCost(input.length + ctxChars);
 
@@ -133,7 +134,7 @@ function Workspace() {
     if (!text || (streaming && !override)) return;
     const base: Msg[] = [...(override ? msgsRef.current : msgs), { role: "user", content: text }];
     setMsgs([...base, { role: "assistant", content: "" }]); if (!override) setInput(""); setStreaming(true);
-    log("prompt", { text: text.slice(0, 2000), chars: text.length, contextFiles: attached, contextChars: ctxChars, auto: !!override });
+    log("prompt", { text: text.slice(0, 2000), chars: text.length, contextFiles: ctxFiles.map((f) => f.path), contextChars: ctxChars, auto: !!override });
     let acc = "";
     try {
       const { data } = await supabase.auth.getSession();
@@ -228,7 +229,7 @@ function Workspace() {
       <ResizablePanelGroup orientation="horizontal" className="flex-1">
         <ResizablePanel defaultSize="40%" minSize="25%">
           <div className="flex h-full flex-col bg-background">
-            <div className="border-b px-3 py-2 font-mono text-xs text-muted-foreground">AI pair · attached: {attached.length} files</div>
+            <div className="border-b px-3 py-2 font-mono text-xs text-muted-foreground">AI pair · attached: {ctxFiles.length} files</div>
             <div className="flex-1 space-y-4 overflow-auto p-3">
               {!msgs.length && <p className="text-sm text-muted-foreground">Ask the AI to explain code, draft a fix, or debug a failing test. Attach files with the clip icon. You're scored on how you verify and steer its output.</p>}
               {msgs.map((m, i) => (
@@ -256,7 +257,7 @@ function Workspace() {
               <div key={f.path} className={cn("group flex items-center gap-1 rounded-sm px-2 py-1 font-mono text-xs", active === f.path ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50")}>
                 <button className="flex flex-1 items-center gap-1.5 truncate text-left" onClick={() => setActive(f.path)}><FileCode className="h-3.5 w-3.5 shrink-0" />{f.path}</button>
                 <button title="Attach to AI context" onClick={() => setAttached((a) => (a.includes(f.path) ? a.filter((x) => x !== f.path) : [...a, f.path]))}>
-                  <Paperclip className={cn("h-3 w-3", attached.includes(f.path) ? "text-primary" : "opacity-0 group-hover:opacity-60")} />
+                  <Paperclip className={cn("h-3 w-3", ctxFiles.some((context) => context.path === f.path) ? "text-primary" : "opacity-0 group-hover:opacity-60")} />
                 </button>
               </div>
             ))}

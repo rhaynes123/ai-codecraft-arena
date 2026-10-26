@@ -1,10 +1,9 @@
 // Server-only Lovable AI Gateway helpers (OpenAI Responses via AI SDK).
 import { createOpenAI } from "@ai-sdk/openai";
+import { CHAT_MODEL, JUDGE_MODEL } from "./ai-models";
 
 const RUN_ID_HEADER = "X-Lovable-AIG-Run-ID";
-export const AI_MODEL = "openai/gpt-6-astra";
-
-export function createGateway(request?: Request) {
+export function createGateway(model: typeof CHAT_MODEL | typeof JUDGE_MODEL, request?: Request) {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("AI is not configured (LOVABLE_API_KEY missing)");
   let runId = request?.headers.get(RUN_ID_HEADER)?.trim() || undefined;
@@ -20,7 +19,7 @@ export function createGateway(request?: Request) {
       return res;
     },
   });
-  return { model: provider.responses(AI_MODEL), getRunId: () => runId };
+  return { model: provider.responses(model), getRunId: () => runId };
 }
 
 export const reasoningOptions = (effort: "low" | "medium" = "low") => ({
