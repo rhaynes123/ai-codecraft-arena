@@ -239,7 +239,7 @@ function Workspace() {
               {streaming && <p className="font-mono text-xs text-primary">thinking…</p>}
             </div>
             <div className="border-t p-2">
-              <Textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask your AI pair…" rows={3}
+              <Textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask your AI pair…" rows={7}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
               <div className="mt-2 flex items-center justify-between">
                 <span className="font-mono text-[11px] text-muted-foreground">{input ? `costs ${cost} credit${cost > 1 ? "s" : ""}` : "Enter to send · Shift+Enter for new line"}</span>
