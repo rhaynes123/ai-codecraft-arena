@@ -18,6 +18,8 @@ import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/j
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ChallengesIndexRouteImport } from './routes/challenges.index'
 import { Route as ChallengesSlugRouteImport } from './routes/challenges.$slug'
+import { Route as MeasuresIndexRouteImport } from './routes/measures.index'
+import { Route as MeasuresDimensionRouteImport } from './routes/measures.$dimension'
 import { Route as AuthenticatedReportsAttemptIdRouteImport } from './routes/_authenticated/reports.$attemptId'
 import { Route as AuthenticatedWorkspaceAttemptIdRouteImport } from './routes/_authenticated/workspace.$attemptId'
 import { Route as ApiPublicJobsRouteImport } from './routes/api/public/jobs'
@@ -66,6 +68,16 @@ const ChallengesSlugRoute = ChallengesSlugRouteImport.update({
   path: '/challenges/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MeasuresIndexRoute = MeasuresIndexRouteImport.update({
+  id: '/measures/',
+  path: '/measures/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeasuresDimensionRoute = MeasuresDimensionRouteImport.update({
+  id: '/measures/$dimension',
+  path: '/measures/$dimension',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedReportsAttemptIdRoute =
   AuthenticatedReportsAttemptIdRouteImport.update({
     id: '/reports/$attemptId',
@@ -92,7 +104,9 @@ export interface FileRoutesByFullPath {
   '/jobs': typeof AuthenticatedJobsRoute
   '/api/chat': typeof ApiChatRoute
   '/challenges/$slug': typeof ChallengesSlugRoute
+  '/measures/$dimension': typeof MeasuresDimensionRoute
   '/challenges/': typeof ChallengesIndexRoute
+  '/measures/': typeof MeasuresIndexRoute
   '/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
   '/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
   '/api/public/jobs': typeof ApiPublicJobsRoute
@@ -105,7 +119,9 @@ export interface FileRoutesByTo {
   '/jobs': typeof AuthenticatedJobsRoute
   '/api/chat': typeof ApiChatRoute
   '/challenges/$slug': typeof ChallengesSlugRoute
+  '/measures/$dimension': typeof MeasuresDimensionRoute
   '/challenges': typeof ChallengesIndexRoute
+  '/measures': typeof MeasuresIndexRoute
   '/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
   '/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
   '/api/public/jobs': typeof ApiPublicJobsRoute
@@ -120,7 +136,9 @@ export interface FileRoutesById {
   '/_authenticated/jobs': typeof AuthenticatedJobsRoute
   '/api/chat': typeof ApiChatRoute
   '/challenges/$slug': typeof ChallengesSlugRoute
+  '/measures/$dimension': typeof MeasuresDimensionRoute
   '/challenges/': typeof ChallengesIndexRoute
+  '/measures/': typeof MeasuresIndexRoute
   '/_authenticated/reports/$attemptId': typeof AuthenticatedReportsAttemptIdRoute
   '/_authenticated/workspace/$attemptId': typeof AuthenticatedWorkspaceAttemptIdRoute
   '/api/public/jobs': typeof ApiPublicJobsRoute
@@ -135,7 +153,9 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/api/chat'
     | '/challenges/$slug'
+    | '/measures/$dimension'
     | '/challenges/'
+    | '/measures/'
     | '/reports/$attemptId'
     | '/workspace/$attemptId'
     | '/api/public/jobs'
@@ -148,7 +168,9 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/api/chat'
     | '/challenges/$slug'
+    | '/measures/$dimension'
     | '/challenges'
+    | '/measures'
     | '/reports/$attemptId'
     | '/workspace/$attemptId'
     | '/api/public/jobs'
@@ -162,7 +184,9 @@ export interface FileRouteTypes {
     | '/_authenticated/jobs'
     | '/api/chat'
     | '/challenges/$slug'
+    | '/measures/$dimension'
     | '/challenges/'
+    | '/measures/'
     | '/_authenticated/reports/$attemptId'
     | '/_authenticated/workspace/$attemptId'
     | '/api/public/jobs'
@@ -175,7 +199,9 @@ export interface RootRouteChildren {
   TrainingRoute: typeof TrainingRoute
   ApiChatRoute: typeof ApiChatRoute
   ChallengesSlugRoute: typeof ChallengesSlugRoute
+  MeasuresDimensionRoute: typeof MeasuresDimensionRoute
   ChallengesIndexRoute: typeof ChallengesIndexRoute
+  MeasuresIndexRoute: typeof MeasuresIndexRoute
   ApiPublicJobsRoute: typeof ApiPublicJobsRoute
 }
 
@@ -244,6 +270,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChallengesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/measures/': {
+      id: '/measures/'
+      path: '/measures'
+      fullPath: '/measures/'
+      preLoaderRoute: typeof MeasuresIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/measures/$dimension': {
+      id: '/measures/$dimension'
+      path: '/measures/$dimension'
+      fullPath: '/measures/$dimension'
+      preLoaderRoute: typeof MeasuresDimensionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/reports/$attemptId': {
       id: '/_authenticated/reports/$attemptId'
       path: '/reports/$attemptId'
@@ -292,7 +332,9 @@ const rootRouteChildren: RootRouteChildren = {
   TrainingRoute: TrainingRoute,
   ApiChatRoute: ApiChatRoute,
   ChallengesSlugRoute: ChallengesSlugRoute,
+  MeasuresDimensionRoute: MeasuresDimensionRoute,
   ChallengesIndexRoute: ChallengesIndexRoute,
+  MeasuresIndexRoute: MeasuresIndexRoute,
   ApiPublicJobsRoute: ApiPublicJobsRoute,
 }
 export const routeTree = rootRouteImport
