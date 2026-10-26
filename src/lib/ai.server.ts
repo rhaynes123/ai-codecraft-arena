@@ -3,9 +3,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { CHAT_MODEL, JUDGE_MODEL } from "./ai-models";
 
 const RUN_ID_HEADER = "X-Lovable-AIG-Run-ID";
-export function createGateway(model: typeof CHAT_MODEL | typeof JUDGE_MODEL, request?: Request) {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new Error("AI is not configured (LOVABLE_API_KEY missing)");
+export function createGateway(model: typeof CHAT_MODEL | typeof JUDGE_MODEL, apiKey: string, request?: Request) {
   let runId = request?.headers.get(RUN_ID_HEADER)?.trim() || undefined;
   const provider = createOpenAI({
     baseURL: "https://ai.gateway.lovable.dev/v1",

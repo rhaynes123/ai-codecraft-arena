@@ -41,6 +41,15 @@ export const Route = createFileRoute("/api/chat")({
           return Response.json({ error: "This attempt is already submitted." }, { status: 400 });
         }
 
+        const apiKey = process.env["LOVABLE_API_KEY"];
+        if (!apiKey) {
+          return Response.json(
+            { error: "The AI connection is temporarily unavailable. No practice credits were spent. You can still edit code and run tests." },
+            { status: 503 },
+          );
+        }
+        const gateway = createGateway(CHAT_MODEL, apiKey, request);
+
         const last = body.messages[body.messages.length - 1];
         if (!last) return Response.json({ error: "Invalid request" }, { status: 400 });
         const context = (body.context ?? []).slice(0, 10);
@@ -57,7 +66,6 @@ export const Route = createFileRoute("/api/chat")({
               : m.content,
         }));
         const challenge = attempt.challenges as { title: string; description: string } | null;
-        const gateway = createGateway(CHAT_MODEL, request);
         const result = streamText({
           model: gateway.model as any,
           instructions: `${INSTRUCTIONS}\n\nCurrent challenge: ${challenge?.title}\n${challenge?.description}`,
