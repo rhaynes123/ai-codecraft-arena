@@ -15,11 +15,11 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/jobs")({
   head: () => ({
     meta: [
-      { title: "Job matches — Steer" },
+      { title: "Job matches — Steer10x" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Live engineering openings matched to your AI-assisted engineering level and strengths." },
-      { property: "og:title", content: "Job matches — Steer" },
+      { property: "og:title", content: "Job matches — Steer10x" },
       { property: "og:description", content: "Real roles and salaries that unlock as your level grows." },
     ],
   }),

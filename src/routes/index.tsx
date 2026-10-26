@@ -7,11 +7,11 @@ import { LEVELS } from "@/lib/scoring";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Steer — Interview prep for engineers who code with AI" },
+      { title: "Steer10x — Interview prep for engineers who code with AI" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Solve real-world repo challenges with an AI pair programmer. Get scored on verification, prompt economy, steering and correctness — then see jobs that match your level." },
-      { property: "og:title", content: "Steer — Interview prep for engineers who code with AI" },
+      { property: "og:title", content: "Steer10x — Interview prep for engineers who code with AI" },
       { property: "og:description", content: "Real-world challenges, an AI pair programmer, and a rubric that scores how well you steer it." },
     ],
   }),
