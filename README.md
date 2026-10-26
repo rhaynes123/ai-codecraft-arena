@@ -1,4 +1,6 @@
-# Ai Codecraft Arena
+# Steer10x
+
+Steer10x: AI is like having a 10x engineer on your team — this app teaches people to steer that 10x engineer.
 
 Create an interactive technical interview prep web application for software engineers in an AI-driven era (like LeetCode or HackerRank, but evaluating how engineers collaborate with and steer AI coding tools).
 

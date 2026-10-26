@@ -33,7 +33,7 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-4 py-24">
           <p className="font-mono text-xs uppercase tracking-widest text-primary">// interview prep for the AI era · built in Detroit, for engineers everywhere</p>
           <h1 className="mt-4 max-w-3xl text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
-            The interview isn't whether you can code. It's whether you can <span className="text-primary">steer</span> the AI that does.
+            The interview isn't whether you can code. It's whether you can <span className="text-primary">steer</span> the 10x engineer that does.
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
             Fix race conditions, migrate API contracts and untangle legacy async code alongside an AI pair programmer.
@@ -69,7 +69,7 @@ function Landing() {
           ))}
         </div>
       </section>
-      <footer className="border-t py-8 text-center font-mono text-xs text-muted-foreground">steer.dev — practice like it's 2026</footer>
+      <footer className="border-t py-8 text-center font-mono text-xs text-muted-foreground">steer10x — hire the AI, grade the human — practice like it's 2026</footer>
     </div>
   );
 }

@@ -9,7 +9,7 @@ export function Logo() {
   return (
     <Link to="/" className="flex items-center gap-2 font-mono text-sm font-bold tracking-tight">
       <span className="grid h-6 w-6 place-items-center rounded-sm bg-primary text-primary-foreground">▲</span>
-      steer<span className="text-primary">.dev</span>
+      steer<span className="text-primary">10x</span>
     </Link>
   );
 }
