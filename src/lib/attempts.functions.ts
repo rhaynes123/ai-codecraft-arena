@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { streamText, Output, jsonSchema } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { combineScores, computeMetrics, overallScore, type Scores } from "./scoring";
+import { JUDGE_MODEL } from "./ai-models";
 
 type TestSummary = { name: string; file: string; passed: boolean; error?: string | undefined; hidden?: boolean | undefined };
 
@@ -108,7 +109,9 @@ export const submitAttempt = createServerFn({ method: "POST" })
     let tips: string[] = [];
     try {
       const { createGateway, reasoningOptions } = await import("./ai.server");
-      const gateway = createGateway();
+      const apiKey = process.env["LOVABLE_API_KEY"];
+      if (!apiKey) throw new Error("The AI connection is temporarily unavailable.");
+      const gateway = createGateway(JUDGE_MODEL, apiKey);
       const result = streamText({
         model: gateway.model as any,
         instructions:
