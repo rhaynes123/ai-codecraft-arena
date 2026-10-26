@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyReports } from "@/lib/queries";
 import { DIMENSIONS, engineerRating, levelFor } from "@/lib/scoring";
+import { JUDGE_MODEL, modelLabel } from "@/lib/ai-models";
 
 export const Route = createFileRoute("/_authenticated/reports/$attemptId")({
   head: () => ({
@@ -52,7 +53,7 @@ function Report() {
       <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="font-mono text-xs text-muted-foreground">report · {r.challenges?.title}</p>
+            <p className="font-mono text-xs text-muted-foreground">report · {r.challenges?.title} · judged by {modelLabel(JUDGE_MODEL)}</p>
             <h1 className="mt-1 text-3xl font-bold">Overall <span className={`font-mono ${scoreTone(r.overall)}`}>{r.overall}</span><span className="text-lg text-muted-foreground">/100</span></h1>
           </div>
           <div className="flex gap-2">
@@ -78,7 +79,7 @@ function Report() {
             {DIMENSIONS.map((d) => (
               <div key={d.key} className="rounded-lg border bg-card p-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">{d.label}</h3>
+                  <h3 className="font-semibold"><Link to="/measures/$dimension" params={{ dimension: d.key }} className="underline decoration-primary/40 underline-offset-4 hover:text-primary">{d.label}</Link></h3>
                   <span className={`font-mono text-xl font-bold ${scoreTone(scores[d.key])}`}>{scores[d.key]}</span>
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary" style={{ width: `${scores[d.key]}%` }} /></div>

@@ -19,10 +19,10 @@ export const Route = createFileRoute("/")({
 });
 
 const DIMS = [
-  { icon: ShieldCheck, title: "Verification Rigor", body: "Do you run tests after applying AI code, and catch the edge cases it missed?" },
-  { icon: MessageSquareCode, title: "Prompt & Context Economy", body: "Clear asks, only the files that matter, no token bloat." },
-  { icon: Bug, title: "Steering & Iteration", body: "Spot hallucinations, reject bad diffs, recover fast from red tests." },
-  { icon: Gauge, title: "Correctness & Quality", body: "Visible and hidden test pass rate plus readable final code." },
+  { icon: ShieldCheck, key: "verification", title: "Verification Rigor", body: "Do you run tests after applying AI code, and catch the edge cases it missed?" },
+  { icon: MessageSquareCode, key: "economy", title: "Prompt & Context Economy", body: "Clear asks, only the files that matter, no token bloat." },
+  { icon: Bug, key: "steering", title: "Steering & Iteration", body: "Spot hallucinations, reject bad diffs, recover fast from red tests." },
+  { icon: Gauge, key: "correctness", title: "Correctness & Quality", body: "Visible and hidden test pass rate plus readable final code." },
 ];
 
 function Landing() {
@@ -51,7 +51,7 @@ function Landing() {
           {DIMS.map((d) => (
             <div key={d.title} className="bg-card p-6">
               <d.icon className="h-5 w-5 text-primary" />
-              <h3 className="mt-4 font-semibold">{d.title}</h3>
+              <h3 className="mt-4 font-semibold"><Link to="/measures/$dimension" params={{ dimension: d.key }} className="underline decoration-primary/40 underline-offset-4 hover:text-primary">{d.title}</Link></h3>
               <p className="mt-2 text-sm text-muted-foreground">{d.body}</p>
             </div>
           ))}

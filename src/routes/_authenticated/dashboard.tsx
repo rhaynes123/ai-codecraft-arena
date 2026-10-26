@@ -130,7 +130,7 @@ function Dashboard() {
                 <ScoreRadar scores={sum.avg} />
                 <div className="grid grid-cols-2 gap-2">
                   {DIMENSIONS.map((d) => (
-                    <div key={d.key} className="flex justify-between rounded-sm border px-2 py-1.5 text-xs"><span className="text-muted-foreground">{d.short}</span><span className={`font-mono font-bold ${scoreTone(sum.avg![d.key])}`}>{sum.avg![d.key]}</span></div>
+                    <div key={d.key} className="flex justify-between rounded-sm border px-2 py-1.5 text-xs"><Link to="/measures/$dimension" params={{ dimension: d.key }} title={d.label} className="text-muted-foreground underline decoration-primary/40 underline-offset-2 hover:text-primary">{d.short}</Link><span className={`font-mono font-bold ${scoreTone(sum.avg![d.key])}`}>{sum.avg![d.key]}</span></div>
                   ))}
                 </div>
               </>

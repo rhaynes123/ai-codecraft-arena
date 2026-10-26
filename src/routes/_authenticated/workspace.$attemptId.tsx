@@ -18,6 +18,7 @@ import { creditCost } from "@/lib/scoring";
 import { getHiddenTests, submitAttempt } from "@/lib/attempts.functions";
 import { cn } from "@/lib/utils";
 import { isVisibleTest, selectAIContext } from "@/lib/ai-context";
+import { CHAT_MODEL, modelLabel } from "@/lib/ai-models";
 
 const Editor = lazy(() => import("@monaco-editor/react"));
 
@@ -229,7 +230,7 @@ function Workspace() {
       <ResizablePanelGroup orientation="horizontal" className="flex-1">
         <ResizablePanel defaultSize="40%" minSize="25%">
           <div className="flex h-full flex-col bg-background">
-            <div className="border-b px-3 py-2 font-mono text-xs text-muted-foreground">AI pair · attached: {ctxFiles.length} files</div>
+            <div className="border-b px-3 py-2 font-mono text-xs text-muted-foreground">AI pair · <span className="text-primary">{modelLabel(CHAT_MODEL)}</span> · attached: {ctxFiles.length} files</div>
             <div className="flex-1 space-y-4 overflow-auto p-3">
               {!msgs.length && <p className="text-sm text-muted-foreground">Ask the AI to explain code, draft a fix, or debug a failing test. Attach files with the clip icon. You're scored on how you verify and steer its output.</p>}
               {msgs.map((m, i) => (
@@ -243,7 +244,7 @@ function Workspace() {
               <Textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask your AI pair…" rows={7}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
               <div className="mt-2 flex items-center justify-between">
-                <span className="font-mono text-[11px] text-muted-foreground">{input ? `costs ${cost} credit${cost > 1 ? "s" : ""}` : "Enter to send · Shift+Enter for new line"}</span>
+                <span className="font-mono text-[11px] text-muted-foreground">{modelLabel(CHAT_MODEL)} · {input ? `costs ${cost} credit${cost > 1 ? "s" : ""}` : "Enter to send · Shift+Enter for new line"}</span>
                 <Button size="sm" onClick={() => send()} disabled={streaming || !input.trim()}><Send className="h-3.5 w-3.5" /></Button>
               </div>
             </div>
