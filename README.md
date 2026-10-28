@@ -26,7 +26,8 @@ Key Product Features & Architecture:
    - Dedicated `/measures` detail pages explaining each scored skill, linked from the home page, dashboard and reports.
 
 5. User Hub & Credit System:
-   - Dashboard with user practice streaks, AI Proficiency radar scores over time, challenge history, and credit balance tracking for live AI queries.
+  - Dashboard with user practice streaks, AI Proficiency radar scores over time, challenge history, and credit balance tracking for live AI queries.
+  - Practice credit caps teach token economy: 20 AI credits per challenge attempt and 40 per day (UTC). Chat and scoring both run on GPT-6 Luna.
    - Level-based job recommendations: your engineer level unlocks matching openings from live public job feeds (Remote OK, Remotive, Hacker News "Who is hiring"), each linked to the original posting, with a Detroit Metro filter and US-remote fallback.
    - Detroit-area training directory with real bootcamps and local technology training programs, linked to their official sources.
    - Clean, dark-mode focused, modern developer-centric UI (Tailwind CSS, shadcn/ui).
