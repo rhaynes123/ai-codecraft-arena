@@ -59,6 +59,7 @@ export function computeMetrics(events: SessionEvent[], passRate: number, credits
     });
     economy = scores.reduce((a, b) => a + b, 0) / scores.length;
     if (prompts.length > 12) economy -= Math.min(25, (prompts.length - 12) * 3);
+    economy += creditEconomyAdjustment(creditsSpent);
   }
 
   // Steering: rejecting/correcting AI output and recovering from failing runs.
@@ -78,6 +79,7 @@ export function computeMetrics(events: SessionEvent[], passRate: number, credits
       testRuns: testRuns.length,
       manualEdits: manualEdits.length,
       verifiedApplies,
+      creditsSpent,
     },
   };
 }

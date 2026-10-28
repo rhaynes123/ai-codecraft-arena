@@ -9,7 +9,7 @@ type TestSummary = { name: string; file: string; passed: boolean; error?: string
 async function ownedAttempt(supabase: any, attemptId: string) {
   const { data, error } = await supabase
     .from("attempts")
-    .select("id, user_id, status, challenge_id, hints_used, started_at, challenges(title, description, acceptance, difficulty)")
+    .select("id, user_id, status, challenge_id, hints_used, credits_spent, started_at, challenges(title, description, acceptance, difficulty)")
     .eq("id", attemptId)
     .maybeSingle();
   if (error || !data) throw new Error("Attempt not found");
@@ -78,7 +78,7 @@ export const submitAttempt = createServerFn({ method: "POST" })
     const total = data.results.length;
     const passed = data.results.filter((r) => r.passed).length;
     const passRate = total ? passed / total : 0;
-    const metrics = computeMetrics(evs, passRate);
+    const metrics = computeMetrics(evs, passRate, Number((attempt as any).credits_spent ?? 0));
 
     // Transcript for the judge (truncated).
     const transcript = evs
