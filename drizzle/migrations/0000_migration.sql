@@ -341,7 +341,13 @@ $f$)),
 
 ('user-api-v2', 'User API v1 to v2 contract migration',
  'Write a two-way adapter between the legacy v1 user payload and the new v2 contract.',
- 'Mobile clients still send v1 users while the new service speaks v2. Implement `toV2` and `toV1` in `src/userAdapter.ts`.\n\nv1: `{ id: number, full_name: string, email: string, created: "YYYY-MM-DD" }`\n\nv2: `{ id: "usr_<n>", name: { first, last }, contact: { email }, createdAt: ISO string }`\n\nNames: first = first word, last = remaining words joined by single spaces (extra whitespace collapsed). Emails are lowercased and trimmed in v2. `createdAt` is midnight UTC. `toV1` must throw "Invalid id" for ids that are not `usr_` followed by digits.',
+ 'Mobile clients still send v1 users while the new service speaks v2. Implement `toV2` and `toV1` in `src/userAdapter.ts`.
+
+v1: `{ id: number, full_name: string, email: string, created: "YYYY-MM-DD" }`
+
+v2: `{ id: "usr_<n>", name: { first, last }, contact: { email }, createdAt: ISO string }`
+
+Names: first = first word, last = remaining words joined by single spaces (extra whitespace collapsed). Emails are lowercased and trimmed in v2. `createdAt` is midnight UTC. `toV1` must throw "Invalid id" for ids that are not `usr_` followed by digits.',
  'API migration', 'Medium', 25, ARRAY['api','contracts','data-mapping'],
  ARRAY['toV2 maps id to "usr_<n>"','Names split on first word; whitespace collapsed','Emails lowercased and trimmed','createdAt is midnight UTC ISO string','toV1(toV2(x)) round-trips normalized data','toV1 throws "Invalid id" on malformed ids'],
  jsonb_build_array(jsonb_build_object('path','src/userAdapter.ts','content',$f$export type UserV1 = { id: number; full_name: string; email: string; created: string };
@@ -388,7 +394,16 @@ $f$)),
 
 ('order-state-machine', 'Order state machine edge cases',
  'The order workflow allows illegal transitions. Lock it down and keep it immutable.',
- 'Support tickets show orders being shipped before payment and cancelled after shipping. Fix `transition` in `src/orderMachine.ts`.\n\nLegal transitions:\n- pending --pay--> paid\n- paid --ship--> shipped\n- shipped --deliver--> delivered\n- pending --cancel--> cancelled\n- paid --cancel--> refunded\n\nAnything else throws an `IllegalTransition` error (exported class) with message `Cannot <event> from <state>`. `transition` must not mutate its input and must append the new state to `history`.',
+ 'Support tickets show orders being shipped before payment and cancelled after shipping. Fix `transition` in `src/orderMachine.ts`.
+
+Legal transitions:
+- pending --pay--> paid
+- paid --ship--> shipped
+- shipped --deliver--> delivered
+- pending --cancel--> cancelled
+- paid --cancel--> refunded
+
+Anything else throws an `IllegalTransition` error (exported class) with message `Cannot <event> from <state>`. `transition` must not mutate its input and must append the new state to `history`.',
  'State machines', 'Medium', 25, ARRAY['state-machine','immutability','edge-cases'],
  ARRAY['All five legal transitions work','Illegal transitions throw IllegalTransition with the exact message','Input order is never mutated','history gets the new state appended'],
  jsonb_build_array(jsonb_build_object('path','src/orderMachine.ts','content',$f$export type State = "pending" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded";
@@ -435,7 +450,11 @@ $f$)),
 
 ('token-bucket-skew', 'Rate limiter clock skew',
  'A token bucket misbehaves when the clock jumps backwards and refills past capacity.',
- 'Our API rate limiter (`src/rateLimiter.ts`) lets bursts through after idle periods and starves clients after an NTP clock correction moves time backwards. Fix it:\n\n- Tokens never exceed `capacity`.\n- If `now()` goes backwards, no tokens are added or removed by the jump, and the reference time is not moved backwards (so time is not double-counted when the clock recovers).\n- Fractional refill accumulates correctly.',
+ 'Our API rate limiter (`src/rateLimiter.ts`) lets bursts through after idle periods and starves clients after an NTP clock correction moves time backwards. Fix it:
+
+- Tokens never exceed `capacity`.
+- If `now()` goes backwards, no tokens are added or removed by the jump, and the reference time is not moved backwards (so time is not double-counted when the clock recovers).
+- Fractional refill accumulates correctly.',
  'Concurrency', 'Hard', 30, ARRAY['rate-limiting','time','edge-cases'],
  ARRAY['Starts full at capacity','Never exceeds capacity after idle','Backward clock jumps neither drain nor add tokens','Recovering clock is not double-counted','Fractional refills accumulate'],
  jsonb_build_array(jsonb_build_object('path','src/rateLimiter.ts','content',$f$export type LimiterOptions = { capacity: number; refillPerSec: number; now: () => number };
