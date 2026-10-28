@@ -53,7 +53,7 @@ function Report() {
       <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="font-mono text-xs text-muted-foreground">report · {r.challenges?.title} · judged by {modelLabel(JUDGE_MODEL)}</p>
+            <p className="font-mono text-xs text-muted-foreground">report · {r.challenges?.title} · judged by {modelLabel(JUDGE_MODEL)}{evidence.stats?.creditsSpent != null ? ` · ${evidence.stats.creditsSpent} / 20 AI credits used` : ""}</p>
             <h1 className="mt-1 text-3xl font-bold">Overall <span className={`font-mono ${scoreTone(r.overall)}`}>{r.overall}</span><span className="text-lg text-muted-foreground">/100</span></h1>
           </div>
           <div className="flex gap-2">

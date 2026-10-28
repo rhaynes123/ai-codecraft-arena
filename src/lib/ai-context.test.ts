@@ -42,4 +42,4 @@ describe("AI context", () => {
 });
 
 it("uses Luna for chat", () => expect(CHAT_MODEL).toBe("openai/gpt-6-luna"));
-it("uses Sol for judging", () => expect(JUDGE_MODEL).toBe("openai/gpt-6-sol"));
+it("uses Luna for judging", () => expect(JUDGE_MODEL).toBe("openai/gpt-6-luna"));

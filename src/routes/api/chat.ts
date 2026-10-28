@@ -4,6 +4,7 @@ import { createGateway, reasoningOptions } from "@/lib/ai.server";
 import { CHAT_MODEL } from "@/lib/ai-models";
 import { userClientFromRequest } from "@/lib/supabase-user.server";
 import { creditCost } from "@/lib/scoring";
+import { CAP_MESSAGES, capFromError } from "@/lib/credit-caps";
 
 type Body = {
   attemptId: string;
@@ -55,8 +56,14 @@ export const Route = createFileRoute("/api/chat")({
         const context = (body.context ?? []).slice(0, 10);
         const contextText = context.map((f) => `--- ${f.path} ---\n${f.content}`).join("\n\n");
         const cost = creditCost(last.content.length + contextText.length);
-        const { error: spendErr } = await caller.supabase.rpc("spend_credits", { _amount: cost, _reason: "AI pair message" });
-        if (spendErr) return Response.json({ error: spendErr.message }, { status: 402 });
+        const { error: spendErr } = await caller.supabase.rpc("spend_attempt_credits", {
+          _attempt_id: body.attemptId, _amount: cost, _reason: "AI pair message",
+        });
+        if (spendErr) {
+          const cap = capFromError(spendErr.message);
+          if (cap) return Response.json({ error: CAP_MESSAGES[cap], cap }, { status: 429 });
+          return Response.json({ error: spendErr.message }, { status: 402 });
+        }
 
         const history: ModelMessage[] = body.messages.slice(-12).map((m, i, arr) => ({
           role: m.role,

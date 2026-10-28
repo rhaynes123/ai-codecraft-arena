@@ -19,6 +19,7 @@ import { getHiddenTests, submitAttempt } from "@/lib/attempts.functions";
 import { cn } from "@/lib/utils";
 import { isVisibleTest, selectAIContext } from "@/lib/ai-context";
 import { CHAT_MODEL, modelLabel } from "@/lib/ai-models";
+import { ATTEMPT_CREDIT_CAP, CAP_MESSAGES, type CapKind } from "@/lib/credit-caps";
 
 const Editor = lazy(() => import("@monaco-editor/react"));
 
@@ -54,6 +55,8 @@ function Workspace() {
   const profile = useProfile();
   const hidden = useServerFn(getHiddenTests);
   const submit = useServerFn(submitAttempt);
+  const [spentState, setSpentState] = useState<number | null>(null);
+  const [capHit, setCapHit] = useState<CapKind | null>(null);
   const { data: attempt } = useQuery({
     queryKey: ["attempt", attemptId],
     queryFn: async () => (await supabase.from("attempts").select("*, challenges(*)").eq("id", attemptId).single()).data,
@@ -129,10 +132,14 @@ function Workspace() {
   const ctxFiles = selectAIContext(files, active, attached).slice(0, 10);
   const ctxChars = ctxFiles.reduce((a, f) => a + f.content.length + f.path.length, 0);
   const cost = creditCost(input.length + ctxChars);
+  const spent = spentState ?? Number((attempt as any)?.credits_spent ?? 0);
+  const overBudget = spent + cost > ATTEMPT_CREDIT_CAP;
+  const capMsg = capHit ? CAP_MESSAGES[capHit] : overBudget && input.trim() ? CAP_MESSAGES.attempt : null;
 
   async function send(override?: string, depth = 0) {
     const text = (override ?? input).trim();
     if (!text || (streaming && !override)) return;
+    if (!override && overBudget) { setCapHit("attempt"); return; }
     const base: Msg[] = [...(override ? msgsRef.current : msgs), { role: "user", content: text }];
     setMsgs([...base, { role: "assistant", content: "" }]); if (!override) setInput(""); setStreaming(true);
     log("prompt", { text: text.slice(0, 2000), chars: text.length, contextFiles: ctxFiles.map((f) => f.path), contextChars: ctxChars, auto: !!override });
@@ -146,8 +153,10 @@ function Workspace() {
       });
       if (!res.ok || !res.body) {
         const err = await res.json().catch(() => ({ error: "AI request failed" }));
+        if (err.cap) setCapHit(err.cap);
         throw new Error(err.error);
       }
+      setSpentState((s) => (s ?? Number((attempt as any)?.credits_spent ?? 0)) + Number(res.headers.get("X-Credits-Spent") ?? 0));
       qc.invalidateQueries({ queryKey: ["profile"] });
       const reader = res.body.getReader(); const dec = new TextDecoder();
       while (true) {
@@ -243,9 +252,10 @@ function Workspace() {
             <div className="border-t p-2">
               <Textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask your AI pair…" rows={7}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
-              <div className="mt-2 flex items-center justify-between">
-                <span className="font-mono text-[11px] text-muted-foreground">{modelLabel(CHAT_MODEL)} · {input ? `costs ${cost} credit${cost > 1 ? "s" : ""}` : "Enter to send · Shift+Enter for new line"}</span>
-                <Button size="sm" onClick={() => send()} disabled={streaming || !input.trim()}><Send className="h-3.5 w-3.5" /></Button>
+              {capMsg && <p className="mt-2 rounded-sm border border-destructive/50 bg-destructive/10 p-2 text-xs text-destructive">{capMsg}</p>}
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <span className="font-mono text-[11px] text-muted-foreground">{modelLabel(CHAT_MODEL)} · <span className={spent >= ATTEMPT_CREDIT_CAP ? "text-destructive" : "text-foreground"}>{spent} / {ATTEMPT_CREDIT_CAP} credits used this attempt</span> · {input ? `costs ${cost} credit${cost > 1 ? "s" : ""}` : "Enter to send"}</span>
+                <Button size="sm" onClick={() => send()} disabled={streaming || !input.trim() || overBudget}><Send className="h-3.5 w-3.5" /></Button>
               </div>
             </div>
           </div>

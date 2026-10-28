@@ -17,8 +17,14 @@ export function creditCost(chars: number): number {
   return Math.max(1, Math.ceil(chars / 500));
 }
 
+/** Economy adjustment from credits spent vs the 20-credit attempt budget: +5 at 0 spent, -5 at the full budget. */
+export function creditEconomyAdjustment(creditsSpent: number, budget = 20): number {
+  const used = Math.max(0, Math.min(1, creditsSpent / budget));
+  return Math.round(5 - used * 10);
+}
+
 /** Deterministic metrics from the session event log. */
-export function computeMetrics(events: SessionEvent[], passRate: number) {
+export function computeMetrics(events: SessionEvent[], passRate: number, creditsSpent = 0) {
   const prompts = events.filter((e) => e.type === "prompt");
   const applies = events.filter((e) => e.type === "diff_applied");
   const rejects = events.filter((e) => e.type === "diff_rejected");
@@ -53,6 +59,7 @@ export function computeMetrics(events: SessionEvent[], passRate: number) {
     });
     economy = scores.reduce((a, b) => a + b, 0) / scores.length;
     if (prompts.length > 12) economy -= Math.min(25, (prompts.length - 12) * 3);
+    economy += creditEconomyAdjustment(creditsSpent);
   }
 
   // Steering: rejecting/correcting AI output and recovering from failing runs.
@@ -72,6 +79,7 @@ export function computeMetrics(events: SessionEvent[], passRate: number) {
       testRuns: testRuns.length,
       manualEdits: manualEdits.length,
       verifiedApplies,
+      creditsSpent,
     },
   };
 }
