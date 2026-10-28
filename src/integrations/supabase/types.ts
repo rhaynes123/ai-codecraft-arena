@@ -17,6 +17,7 @@ export type Database = {
       attempts: {
         Row: {
           challenge_id: string
+          credits_spent: number
           files: Json
           hints_used: number
           id: string
@@ -27,6 +28,7 @@ export type Database = {
         }
         Insert: {
           challenge_id: string
+          credits_spent?: number
           files: Json
           hints_used?: number
           id?: string
@@ -37,6 +39,7 @@ export type Database = {
         }
         Update: {
           challenge_id?: string
+          credits_spent?: number
           files?: Json
           hints_used?: number
           id?: string
@@ -330,6 +333,10 @@ export type Database = {
     Functions: {
       claim_daily_credits: { Args: never; Returns: number }
       set_region: { Args: { _region: string }; Returns: string }
+      spend_attempt_credits: {
+        Args: { _amount: number; _attempt_id: string; _reason: string }
+        Returns: number
+      }
       spend_credits: {
         Args: { _amount: number; _reason: string }
         Returns: number
