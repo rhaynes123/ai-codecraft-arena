@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { attemptStatusByChallenge } from "./queries";
 
-describe("attemptStatusByChallenge", {
+describe("attemptStatusByChallenge", () => {
   // Repeating a completed challenge leaves it completed, not "in progress" again.
   it("completed beats in progress when a challenge has both", () => {
     const map = attemptStatusByChallenge([
