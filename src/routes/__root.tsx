@@ -15,6 +15,13 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+// Dev-only: expose the browser test runner so challenge content can be validated headlessly.
+if (import.meta.env.DEV) {
+  import("@/lib/test-runner").then((m) => {
+    (window as unknown as Record<string, unknown>).__runTests = m.runTests;
+  });
+}
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
