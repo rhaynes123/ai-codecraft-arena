@@ -56,6 +56,17 @@ function Catalog() {
           {cats.map((c) => <button key={c} className={chip(cat === c)} onClick={() => setCat(c)}>{c}</button>)}
           <span className="mx-2 w-px bg-border" />
           <button className={chip(detroit)} onClick={() => setDetroit((d) => !d)}>Detroit industries</button>
+          {user && (
+            <>
+              <span className="mx-2 w-px bg-border" />
+              <button className={chip(status === "in_progress")} onClick={() => setStatus(status === "in_progress" ? "All" : "in_progress")}>
+                <PlayCircle className="mr-1 inline h-3 w-3" />In progress ({startedCount})
+              </button>
+              <button className={chip(status === "completed")} onClick={() => setStatus(status === "completed" ? "All" : "completed")}>
+                <CheckCircle2 className="mr-1 inline h-3 w-3" />Completed ({completedCount})
+              </button>
+            </>
+          )}
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {isLoading && Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-44 animate-pulse rounded-lg border bg-card" />)}
