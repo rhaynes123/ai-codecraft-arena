@@ -6,7 +6,8 @@ import { ScoreRadar, scoreTone } from "@/components/ScoreRadar";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyReports } from "@/lib/queries";
-import { DIMENSIONS, engineerRating, levelFor } from "@/lib/scoring";
+import { DIMENSIONS, levelFromReports } from "@/lib/scoring";
+import { toRated } from "@/lib/queries";
 import { JUDGE_MODEL, modelLabel } from "@/lib/ai-models";
 
 export const Route = createFileRoute("/_authenticated/reports/$attemptId")({
@@ -41,10 +42,10 @@ function Report() {
   // Level change caused by this submission.
   const list = all.data ?? [];
   const idx = list.findIndex((x) => x.attempt_id === attemptId);
-  const toRating = (arr: typeof list) => engineerRating(arr.map((x) => ({ overall: x.overall, difficulty: x.challenges?.difficulty ?? "Medium" })));
-  const after = idx >= 0 ? levelFor(toRating(list.slice(idx))) : null;
+  const toLevel = (arr: typeof list) => levelFromReports(toRated(arr as any)).level;
+  const after = idx >= 0 ? toLevel(list.slice(idx)) : null;
   const beforeList = idx >= 0 ? list.slice(idx + 1) : [];
-  const before = beforeList.length ? levelFor(toRating(beforeList)) : null;
+  const before = beforeList.length ? toLevel(beforeList) : null;
   const leveledUp = after && (!before || after.level > before.level) && after.level > 1;
 
   return (

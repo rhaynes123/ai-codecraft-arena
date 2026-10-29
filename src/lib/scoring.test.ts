@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { creditCost, engineerRating, jobAccess, jobMatch, levelFor, practiceStreak, combineScores } from "./scoring";
+import { creditCost, engineerRating, jobAccess, jobMatch, levelFor, levelFromReports, practiceStreak, combineScores } from "./scoring";
 
 describe("credits", () => {
   it("charges 1 credit per 500 chars, minimum 1", () => {
@@ -9,16 +9,35 @@ describe("credits", () => {
 });
 
 describe("levels", () => {
-  it("maps ratings to L1-L5 thresholds", () => {
-    expect(levelFor(39).level).toBe(1);
-    expect(levelFor(40).level).toBe(2);
-    expect(levelFor(55).level).toBe(3);
-    expect(levelFor(70).level).toBe(4);
-    expect(levelFor(85).level).toBe(5);
+  const top = { verification: 95, economy: 95, steering: 95, correctness: 95 };
+  const all = { rating: 100, distinct: 30, hard: 10, avg: top };
+  it("needs rating 50 and 3 challenges for L2", () => {
+    expect(levelFor({ ...all, rating: 49 }).level).toBe(1);
+    expect(levelFor({ ...all, distinct: 2 }).level).toBe(1);
+    expect(levelFor({ ...all, rating: 50, distinct: 3, hard: 0, avg: null }).level).toBe(2);
   });
-  it("weights hard challenges above easy ones", () => {
-    expect(engineerRating([{ overall: 60, difficulty: "Hard" }])).toBe(69);
-    expect(engineerRating([{ overall: 60, difficulty: "Easy" }])).toBe(51);
+  it("needs 2 Hard challenges for Senior", () => {
+    expect(levelFor({ ...all, hard: 1 }).level).toBe(2);
+    expect(levelFor({ ...all, rating: 65, distinct: 8, hard: 2, avg: null }).level).toBe(3);
+  });
+  it("needs every skill 65+ for Staff and 75+ for Principal", () => {
+    expect(levelFor({ ...all, avg: { ...top, steering: 64 } }).level).toBe(3);
+    expect(levelFor({ ...all, avg: { ...top, steering: 74 } }).level).toBe(4);
+    expect(levelFor(all).level).toBe(5);
+  });
+  it("needs 25 challenges for Principal", () => {
+    expect(levelFor({ ...all, distinct: 24 }).level).toBe(4);
+  });
+  it("counts only your best attempt per challenge", () => {
+    const r = Array.from({ length: 10 }, (_, i) => ({ overall: 60, difficulty: "Medium", slug: `c${i}` }));
+    expect(engineerRating([{ overall: 40, difficulty: "Medium", slug: "c0" }, ...r])).toBe(60);
+  });
+  it("pulls the rating toward 50 under 10 distinct challenges", () => {
+    expect(engineerRating(Array.from({ length: 5 }, (_, i) => ({ overall: 90, difficulty: "Medium", slug: `c${i}` })))).toBe(70);
+  });
+  it("11 exercises with high scores is not Principal", () => {
+    const reps = Array.from({ length: 11 }, (_, i) => ({ overall: 98, difficulty: "Hard", slug: `c${i}`, scores: top }));
+    expect(levelFromReports(reps).level.level).toBeLessThan(5);
   });
 });
 

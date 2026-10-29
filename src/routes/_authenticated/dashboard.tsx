@@ -105,7 +105,8 @@ function Dashboard() {
             {sum.ranked && sum.level.next && (
               <div className="mt-3">
                 <Progress value={sum.level.progress * 100} className="h-1.5" />
-                <div className="mt-1 font-mono text-[11px] text-muted-foreground">rating {sum.rating} → L{sum.level.next.level} at {sum.level.next.min}</div>
+                <div className="mt-1 font-mono text-[11px] text-muted-foreground">rating {sum.rating}</div>
+                {sum.level.missing.length > 0 && <div className="mt-1 text-[11px] text-muted-foreground">{sum.level.next.name} needs: {sum.level.missing.join(" · ")}</div>}
               </div>
             )}
           </Stat>

@@ -129,7 +129,7 @@ function Jobs() {
               <h2 className="flex items-center gap-3 font-mono text-sm">
                 <span className="font-bold">L{lvl} · {LEVELS[lvl - 1]!.name}</span>
                 <span className={cn("rounded-sm px-1.5 py-0.5 text-[10px] uppercase", access === "open" ? "bg-primary text-primary-foreground" : access === "stretch" ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground")}>
-                  {access === "open" ? "open to you" : access === "stretch" ? "stretch" : `unlocks at rating ${LEVELS[lvl - 1]!.min}`}
+                  {access === "open" ? "open to you" : access === "stretch" ? "stretch" : `needs rating ${LEVELS[lvl - 1]!.min}, ${LEVELS[lvl - 1]!.minChallenges} challenges, ${LEVELS[lvl - 1]!.minHard} Hard`}
                 </span>
               </h2>
               <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">

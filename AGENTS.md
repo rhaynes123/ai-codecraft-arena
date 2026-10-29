@@ -24,3 +24,6 @@
 - Keep chat and judge model identifiers independently configured in a browser-safe module; instantiate the server-only gateway per call with the appropriate identifier so model changes cannot accidentally affect both roles.
 - Read AI credentials inside route/server-function handlers and pass them to the provider helper; chat must check availability before spending practice credits and return a safe 503 message when configuration is absent rather than throwing a route error.
 - Select automatic active-file and companion visible-test context through a pure helper, then merge manual extras and use the same selection for requests, costs, indicators, and event logs so scoring reflects the actual context sent.
+
+## Levels
+- Engineer level is computed client-side from the user's reports through pure helpers in `src/lib/scoring.ts` (`levelFromReports`), so thresholds stay unit-testable and need no stored state.

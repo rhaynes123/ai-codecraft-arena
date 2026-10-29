@@ -59,12 +59,13 @@ function Landing() {
       </section>
       <section className="mx-auto max-w-7xl px-4 pb-24">
         <h2 className="font-mono text-sm uppercase tracking-widest text-muted-foreground">Level up, unlock roles</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Levels take more than a high score: each one also needs enough challenges, Hard challenges, and steady skills.</p>
         <div className="mt-6 grid gap-3 md:grid-cols-5">
           {LEVELS.map((l) => (
             <div key={l.level} className="rounded-lg border bg-card p-4">
               <div className="font-mono text-2xl font-bold text-primary">L{l.level}</div>
               <div className="mt-1 font-medium">{l.name}</div>
-              <div className="mt-1 font-mono text-xs text-muted-foreground">rating ≥ {l.min}</div>
+              <div className="mt-1 font-mono text-xs text-muted-foreground">rating ≥ {l.min}{l.minChallenges ? ` · ${l.minChallenges} challenges` : ""}{l.minHard ? ` · ${l.minHard} Hard` : ""}{l.minDimension ? ` · every skill ${l.minDimension}+` : ""}</div>
             </div>
           ))}
         </div>
