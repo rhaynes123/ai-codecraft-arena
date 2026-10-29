@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { Coins, Flame, Trophy } from "lucide-react";
+import { Coins, Flame, MessageSquareText, Trophy } from "lucide-react";
 import { AppHeader, useProfile } from "@/components/AppHeader";
 import { ScoreRadar, ScoreTrend, scoreTone } from "@/components/ScoreRadar";
 import { Progress } from "@/components/ui/progress";
@@ -159,7 +159,11 @@ function Dashboard() {
                   <span className="truncate">{r.challenges?.title}</span>
                   <span className={`shrink-0 font-mono text-xs uppercase tracking-wider ${diffTone(r.challenges?.difficulty)}`}>{r.challenges?.difficulty}</span>
                 </span>
-                <span className="flex shrink-0 items-center gap-4 font-mono text-xs"><span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span><span className={`font-bold ${scoreTone(r.overall)}`}>{r.overall}</span></span>
+                <span className="flex shrink-0 items-center gap-4 font-mono text-xs">
+                  <span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                  <span className={`font-bold ${scoreTone(r.overall)}`}>{r.overall}</span>
+                  <span className="inline-flex items-center gap-1 text-primary"><MessageSquareText className="h-3.5 w-3.5" />view feedback</span>
+                </span>
               </Link>
             ))}
             {!list.length && !inProgress.data?.length && <Empty />}
