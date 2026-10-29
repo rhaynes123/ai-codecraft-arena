@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Clock, GraduationCap } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, Clock, GraduationCap, PlayCircle } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useChallenges } from "@/lib/queries";
+import { attemptStatusByChallenge, useChallenges, useMyAttempts } from "@/lib/queries";
+import { useSessionUser } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/challenges/")({
