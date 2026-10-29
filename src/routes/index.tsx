@@ -64,7 +64,7 @@ function Landing() {
             <div key={l.level} className="rounded-lg border bg-card p-4">
               <div className="font-mono text-2xl font-bold text-primary">L{l.level}</div>
               <div className="mt-1 font-medium">{l.name}</div>
-              <div className="mt-1 font-mono text-xs text-muted-foreground">rating ≥ {l.min}</div>
+              <div className="mt-1 font-mono text-xs text-muted-foreground">rating ≥ {l.min}{l.minChallenges ? ` · ${l.minChallenges} challenges` : ""}{l.minHard ? ` · ${l.minHard} Hard` : ""}{l.minDimension ? ` · every skill ${l.minDimension}+` : ""}</div>
             </div>
           ))}
         </div>

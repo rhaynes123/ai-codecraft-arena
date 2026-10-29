@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { averageScores, engineerRating, levelFor, type Scores } from "./scoring";
+import { averageScores, levelFromReports, type RatedReport, type Scores } from "./scoring";
 
 export function useChallenges() {
   return useQuery({
@@ -31,10 +31,17 @@ export function useMyReports() {
   });
 }
 
+export function toRated(reports: NonNullable<ReturnType<typeof useMyReports>["data"]>): RatedReport[] {
+  return reports.map((r) => ({
+    overall: r.overall, difficulty: r.challenges?.difficulty ?? "Medium", slug: r.challenges?.slug,
+    scores: { verification: r.verification, economy: r.economy, steering: r.steering, correctness: r.correctness },
+  }));
+}
+
 export function summarizeReports(reports: NonNullable<ReturnType<typeof useMyReports>["data"]>) {
-  const rating = engineerRating(reports.map((r) => ({ overall: r.overall, difficulty: r.challenges?.difficulty ?? "Medium" })));
+  const { rating, level } = levelFromReports(toRated(reports));
   const recentScores: Scores[] = reports.slice(0, 5).map((r) => ({
     verification: r.verification, economy: r.economy, steering: r.steering, correctness: r.correctness,
   }));
-  return { rating, level: levelFor(rating), avg: averageScores(recentScores), ranked: reports.length > 0 };
+  return { rating, level, avg: averageScores(recentScores), ranked: reports.length > 0 };
 }

@@ -99,30 +99,72 @@ export function overallScore(s: Scores): number {
 }
 
 // ---------- Levels ----------
+// A level needs ALL of: rating, distinct challenges, distinct Hard challenges and (top levels) a per-skill floor.
 export const LEVELS = [
-  { level: 1, name: "Junior", min: 0 },
-  { level: 2, name: "Mid-level", min: 40 },
-  { level: 3, name: "Senior", min: 55 },
-  { level: 4, name: "Staff", min: 70 },
-  { level: 5, name: "Principal", min: 85 },
+  { level: 1, name: "Junior", min: 0, minChallenges: 0, minHard: 0, minDimension: 0 },
+  { level: 2, name: "Mid-level", min: 50, minChallenges: 3, minHard: 0, minDimension: 0 },
+  { level: 3, name: "Senior", min: 65, minChallenges: 8, minHard: 2, minDimension: 0 },
+  { level: 4, name: "Staff", min: 78, minChallenges: 15, minHard: 5, minDimension: 65 },
+  { level: 5, name: "Principal", min: 90, minChallenges: 25, minHard: 8, minDimension: 75 },
 ] as const;
+export type Level = (typeof LEVELS)[number];
 
 const DIFFICULTY_WEIGHT: Record<string, number> = { Easy: 0.85, Medium: 1, Hard: 1.15 };
+const RATING_WINDOW = 10;
 
-/** Rating = average of the 5 most recent overall scores, weighted by difficulty, capped at 100. */
-export function engineerRating(reports: { overall: number; difficulty: string }[]): number {
-  const recent = reports.slice(0, 5);
-  if (!recent.length) return 0;
-  const vals = recent.map((r) => Math.min(100, r.overall * (DIFFICULTY_WEIGHT[r.difficulty] ?? 1)));
-  return clamp(vals.reduce((a, b) => a + b, 0) / vals.length);
+export type RatedReport = { overall: number; difficulty: string; slug?: string; scores?: Scores };
+
+/** Best report per challenge (by weighted overall), ordered by most recent attempt. Input newest-first. */
+function bestPerChallenge(reports: RatedReport[]) {
+  const map = new Map<string, { r: RatedReport; w: number }>();
+  reports.forEach((r, i) => {
+    const key = r.slug ?? `#${i}`;
+    const w = Math.min(100, r.overall * (DIFFICULTY_WEIGHT[r.difficulty] ?? 1));
+    const cur = map.get(key);
+    if (!cur) map.set(key, { r, w });
+    else if (w > cur.w) map.set(key, { r: { ...r }, w });
+  });
+  return [...map.values()];
 }
 
-export function levelFor(rating: number) {
-  let current: (typeof LEVELS)[number] = LEVELS[0];
-  for (const l of LEVELS) if (rating >= l.min) current = l;
+/**
+ * Rating = average weighted best score over the last 10 distinct challenges,
+ * pulled toward 50 until 10 distinct challenges are done (confidence ramp).
+ */
+export function engineerRating(reports: RatedReport[]): number {
+  const best = bestPerChallenge(reports).slice(0, RATING_WINDOW);
+  if (!best.length) return 0;
+  const raw = best.reduce((a, b) => a + b.w, 0) / best.length;
+  const c = best.length / RATING_WINDOW;
+  return clamp(raw * c + 50 * (1 - c));
+}
+
+export type LevelInput = { rating: number; distinct: number; hard: number; avg: Scores | null };
+
+function unmet(l: Level, x: LevelInput): string[] {
+  const out: string[] = [];
+  if (x.rating < l.min) out.push(`rating ${l.min}+`);
+  if (x.distinct < l.minChallenges) out.push(`${l.minChallenges - x.distinct} more challenge${l.minChallenges - x.distinct === 1 ? "" : "s"}`);
+  if (x.hard < l.minHard) out.push(`${l.minHard - x.hard} more Hard`);
+  if (l.minDimension) for (const d of DIMENSIONS) if ((x.avg?.[d.key] ?? 0) < l.minDimension) out.push(`${d.short} ${l.minDimension}+`);
+  return out;
+}
+
+export function levelFor(x: LevelInput) {
+  let current: Level = LEVELS[0];
+  for (const l of LEVELS) { if (unmet(l, x).length) break; current = l; }
   const next = LEVELS.find((l) => l.level === current.level + 1) ?? null;
-  const progress = next ? (rating - current.min) / (next.min - current.min) : 1;
-  return { ...current, next, progress: Math.max(0, Math.min(1, progress)) };
+  const progress = next ? (x.rating - current.min) / (next.min - current.min) : 1;
+  return { ...current, next, missing: next ? unmet(next, x) : [], progress: Math.max(0, Math.min(1, progress)) };
+}
+
+/** Everything level-related from a newest-first report list. */
+export function levelFromReports(reports: RatedReport[]) {
+  const best = bestPerChallenge(reports);
+  const rating = engineerRating(reports);
+  const avg = averageScores(best.slice(0, RATING_WINDOW).map((b) => b.r.scores).filter(Boolean) as Scores[]);
+  const hard = best.filter((b) => b.r.difficulty === "Hard").length;
+  return { rating, avg, level: levelFor({ rating, distinct: best.length, hard, avg }) };
 }
 
 // ---------- Jobs ----------
