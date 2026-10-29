@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { summarizeReports, useChallenges, useMyReports } from "@/lib/queries";
 import { DIMENSIONS, practiceStreak } from "@/lib/scoring";
+import { diffTone } from "@/lib/difficulty";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -38,7 +39,7 @@ function Dashboard() {
   });
   const inProgress = useQuery({
     queryKey: ["in-progress"],
-    queryFn: async () => (await supabase.from("attempts").select("id, started_at, challenges(title)").eq("status", "in_progress").order("started_at", { ascending: false }).limit(5)).data ?? [],
+    queryFn: async () => (await supabase.from("attempts").select("id, started_at, challenges(title, difficulty)").eq("status", "in_progress").order("started_at", { ascending: false }).limit(5)).data ?? [],
   });
 
   useEffect(() => {
