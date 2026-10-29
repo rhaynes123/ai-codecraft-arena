@@ -4,7 +4,7 @@ import { ArrowUpRight, CheckCircle2, Clock, GraduationCap, PlayCircle } from "lu
 import { AppHeader } from "@/components/AppHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { attemptStatusByChallenge, useChallenges, useMyAttempts } from "@/lib/queries";
+import { attemptCountByChallenge, attemptStatusByChallenge, useChallenges, useMyAttempts } from "@/lib/queries";
 import { useSessionUser } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 import { diffTone } from "@/lib/difficulty";
@@ -29,6 +29,7 @@ function Catalog() {
   const { user } = useSessionUser();
   const { data: attempts } = useMyAttempts(!!user);
   const statusByChallenge = useMemo(() => attemptStatusByChallenge(attempts), [attempts]);
+  const countByChallenge = useMemo(() => attemptCountByChallenge(attempts), [attempts]);
   const [diff, setDiff] = useState("All");
   const [cat, setCat] = useState("All");
   const [status, setStatus] = useState<"All" | "in_progress" | "completed">("All");
@@ -89,7 +90,10 @@ function Catalog() {
               <p className="mt-2 text-sm text-muted-foreground">{c.summary}</p>
               <div className="mt-4 flex flex-wrap items-center gap-1.5">
                 {c.tags.map((t) => <Badge key={t} variant="secondary" className="font-mono text-[10px]">{t}</Badge>)}
-                <span className="ml-auto flex items-center gap-1 font-mono text-xs text-muted-foreground"><Clock className="h-3 w-3" />{c.est_minutes}m</span>
+                {countByChallenge.get(c.id) != null && (
+                  <span className="ml-auto font-mono text-xs text-muted-foreground">{countByChallenge.get(c.id)}× attempted</span>
+                )}
+                <span className={`flex items-center gap-1 font-mono text-xs text-muted-foreground ${countByChallenge.get(c.id) == null ? "ml-auto" : ""}`}><Clock className="h-3 w-3" />{c.est_minutes}m</span>
               </div>
             </Link>
           ))}

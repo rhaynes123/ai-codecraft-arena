@@ -53,6 +53,13 @@ export function attemptStatusByChallenge(attempts: AttemptStatusRow[] | undefine
   return map;
 }
 
+/** challenge_id -> total number of attempts (any status) the user has made on it */
+export function attemptCountByChallenge(attempts: AttemptStatusRow[] | undefined) {
+  const map = new Map<string, number>();
+  for (const a of attempts ?? []) map.set(a.challenge_id, (map.get(a.challenge_id) ?? 0) + 1);
+  return map;
+}
+
 export function useMyReports() {
   return useQuery({
     queryKey: ["my-reports"],
