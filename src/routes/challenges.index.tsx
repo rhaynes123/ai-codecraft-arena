@@ -76,6 +76,15 @@ function Catalog() {
                 <span className="text-muted-foreground">{c.category}</span>
                 <span className={diffTone(c.difficulty)}>{c.difficulty}</span>
               </div>
+              {statusByChallenge.get(c.id) && (
+                <div className="mt-2 flex items-center gap-1.5 font-mono text-xs">
+                  {statusByChallenge.get(c.id) === "completed" ? (
+                    <span className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="h-3.5 w-3.5" />Completed</span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-primary"><PlayCircle className="h-3.5 w-3.5" />In progress</span>
+                  )}
+                </div>
+              )}
               <h2 className="mt-3 text-lg font-semibold group-hover:text-primary">{c.title}</h2>
               <p className="mt-2 text-sm text-muted-foreground">{c.summary}</p>
               <div className="mt-4 flex flex-wrap items-center gap-1.5">
