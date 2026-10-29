@@ -59,6 +59,7 @@ function Landing() {
       </section>
       <section className="mx-auto max-w-7xl px-4 pb-24">
         <h2 className="font-mono text-sm uppercase tracking-widest text-muted-foreground">Level up, unlock roles</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Levels take more than a high score: each one also needs enough challenges, Hard challenges, and steady skills.</p>
         <div className="mt-6 grid gap-3 md:grid-cols-5">
           {LEVELS.map((l) => (
             <div key={l.level} className="rounded-lg border bg-card p-4">
