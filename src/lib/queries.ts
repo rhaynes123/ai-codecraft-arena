@@ -2,6 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { averageScores, levelFromReports, type RatedReport, type Scores } from "./scoring";
 
+export type ChallengeRow = {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  category: string;
+  difficulty: string;
+  est_minutes: number;
+  tags: string[];
+};
+
 export function useChallenges() {
   return useQuery({
     queryKey: ["challenges"],
@@ -11,9 +22,35 @@ export function useChallenges() {
         .select("id, slug, title, summary, category, difficulty, est_minutes, tags")
         .order("sort_order");
       if (error) throw error;
-      return data;
+      return data as ChallengeRow[];
     },
   });
+}
+
+export type AttemptStatusRow = { challenge_id: string; status: string };
+
+export function useMyAttempts(enabled: boolean) {
+  return useQuery({
+    queryKey: ["my-attempts"],
+    enabled,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("attempts")
+        .select("challenge_id, status");
+      if (error) throw error;
+      return data as AttemptStatusRow[];
+    },
+  });
+}
+
+/** challenge_id -> "completed" | "in_progress" (first match wins: completed beats in progress) */
+export function attemptStatusByChallenge(attempts: AttemptStatusRow[] | undefined) {
+  const map = new Map<string, "completed" | "in_progress">();
+  for (const a of attempts ?? []) {
+    if (a.status === "submitted") map.set(a.challenge_id, "completed");
+    else if (!map.has(a.challenge_id)) map.set(a.challenge_id, "in_progress");
+  }
+  return map;
 }
 
 export function useMyReports() {
