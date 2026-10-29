@@ -26,14 +26,20 @@ export const diffTone = (d: string) => (d === "Easy" ? "text-success" : d === "M
 
 function Catalog() {
   const { data, isLoading } = useChallenges();
+  const { user } = useSessionUser();
+  const { data: attempts } = useMyAttempts(!!user);
+  const statusByChallenge = useMemo(() => attemptStatusByChallenge(attempts), [attempts]);
   const [diff, setDiff] = useState("All");
   const [cat, setCat] = useState("All");
+  const [status, setStatus] = useState<"All" | "in_progress" | "completed">("All");
   const cats = useMemo(() => ["All", ...new Set((data ?? []).map((c) => c.category))], [data]);
   const [detroit, setDetroit] = useState(false);
   const list = (data ?? []).filter(
-    (c) => (diff === "All" || c.difficulty === diff) && (cat === "All" || c.category === cat) && (!detroit || c.tags.includes("Detroit")),
+    (c) => (diff === "All" || c.difficulty === diff) && (cat === "All" || c.category === cat) && (!detroit || c.tags.includes("Detroit")) && (status === "All" || statusByChallenge.get(c.id) === status),
   );
   const chip = (active: boolean) => cn("rounded-sm border px-2.5 py-1 font-mono text-xs transition-colors", active ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent");
+  const startedCount = useMemo(() => [...statusByChallenge.values()].filter((s) => s === "in_progress").length, [statusByChallenge]);
+  const completedCount = useMemo(() => [...statusByChallenge.values()].filter((s) => s === "completed").length, [statusByChallenge]);
 
   return (
     <div className="min-h-screen">
