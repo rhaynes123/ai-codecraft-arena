@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { summarizeReports, useChallenges, useMyReports } from "@/lib/queries";
 import { DIMENSIONS, practiceStreak } from "@/lib/scoring";
+import { diffTone } from "@/lib/difficulty";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -38,7 +39,7 @@ function Dashboard() {
   });
   const inProgress = useQuery({
     queryKey: ["in-progress"],
-    queryFn: async () => (await supabase.from("attempts").select("id, started_at, challenges(title)").eq("status", "in_progress").order("started_at", { ascending: false }).limit(5)).data ?? [],
+    queryFn: async () => (await supabase.from("attempts").select("id, started_at, challenges(title, difficulty)").eq("status", "in_progress").order("started_at", { ascending: false }).limit(5)).data ?? [],
   });
 
   useEffect(() => {
@@ -147,14 +148,18 @@ function Dashboard() {
         <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
           <Panel title="Challenge history">
             {inProgress.data?.map((a) => (
-              <Link key={a.id} to="/workspace/$attemptId" params={{ attemptId: a.id }} className="flex items-center justify-between border-b py-2.5 text-sm hover:text-primary">
-                <span>{a.challenges?.title}</span><span className="font-mono text-xs text-warning">in progress → resume</span>
+              <Link key={a.id} to="/workspace/$attemptId" params={{ attemptId: a.id }} className="flex items-center justify-between gap-3 border-b py-2.5 text-sm hover:text-primary">
+                <span className="flex min-w-0 items-baseline gap-2"><span className="truncate">{a.challenges?.title}</span><span className={`shrink-0 font-mono text-xs uppercase tracking-wider ${diffTone(a.challenges?.difficulty)}`}>{a.challenges?.difficulty}</span></span>
+                <span className="shrink-0 font-mono text-xs text-warning">in progress → resume</span>
               </Link>
             ))}
             {list.map((r) => (
-              <Link key={r.attempt_id} to="/reports/$attemptId" params={{ attemptId: r.attempt_id }} className="flex items-center justify-between border-b py-2.5 text-sm hover:text-primary">
-                <span>{r.challenges?.title}</span>
-                <span className="flex items-center gap-4 font-mono text-xs"><span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span><span className={`font-bold ${scoreTone(r.overall)}`}>{r.overall}</span></span>
+              <Link key={r.attempt_id} to="/reports/$attemptId" params={{ attemptId: r.attempt_id }} className="flex items-center justify-between gap-3 border-b py-2.5 text-sm hover:text-primary">
+                <span className="flex min-w-0 items-baseline gap-2">
+                  <span className="truncate">{r.challenges?.title}</span>
+                  <span className={`shrink-0 font-mono text-xs uppercase tracking-wider ${diffTone(r.challenges?.difficulty)}`}>{r.challenges?.difficulty}</span>
+                </span>
+                <span className="flex shrink-0 items-center gap-4 font-mono text-xs"><span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span><span className={`font-bold ${scoreTone(r.overall)}`}>{r.overall}</span></span>
               </Link>
             ))}
             {!list.length && !inProgress.data?.length && <Empty />}

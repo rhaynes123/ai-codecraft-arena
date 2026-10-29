@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { attemptStatusByChallenge, useChallenges, useMyAttempts } from "@/lib/queries";
 import { useSessionUser } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
+import { diffTone } from "@/lib/difficulty";
 
 export const Route = createFileRoute("/challenges/")({
   head: () => ({
@@ -22,7 +23,6 @@ export const Route = createFileRoute("/challenges/")({
   component: Catalog,
 });
 
-export const diffTone = (d: string) => (d === "Easy" ? "text-success" : d === "Medium" ? "text-warning" : "text-destructive");
 
 function Catalog() {
   const { data, isLoading } = useChallenges();
