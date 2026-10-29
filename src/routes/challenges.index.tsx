@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Clock, GraduationCap } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, Clock, GraduationCap, PlayCircle } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useChallenges } from "@/lib/queries";
+import { attemptStatusByChallenge, useChallenges, useMyAttempts } from "@/lib/queries";
+import { useSessionUser } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/challenges/")({
@@ -25,14 +26,20 @@ export const diffTone = (d: string) => (d === "Easy" ? "text-success" : d === "M
 
 function Catalog() {
   const { data, isLoading } = useChallenges();
+  const { user } = useSessionUser();
+  const { data: attempts } = useMyAttempts(!!user);
+  const statusByChallenge = useMemo(() => attemptStatusByChallenge(attempts), [attempts]);
   const [diff, setDiff] = useState("All");
   const [cat, setCat] = useState("All");
+  const [status, setStatus] = useState<"All" | "in_progress" | "completed">("All");
   const cats = useMemo(() => ["All", ...new Set((data ?? []).map((c) => c.category))], [data]);
   const [detroit, setDetroit] = useState(false);
   const list = (data ?? []).filter(
-    (c) => (diff === "All" || c.difficulty === diff) && (cat === "All" || c.category === cat) && (!detroit || c.tags.includes("Detroit")),
+    (c) => (diff === "All" || c.difficulty === diff) && (cat === "All" || c.category === cat) && (!detroit || c.tags.includes("Detroit")) && (status === "All" || statusByChallenge.get(c.id) === status),
   );
   const chip = (active: boolean) => cn("rounded-sm border px-2.5 py-1 font-mono text-xs transition-colors", active ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent");
+  const startedCount = useMemo(() => [...statusByChallenge.values()].filter((s) => s === "in_progress").length, [statusByChallenge]);
+  const completedCount = useMemo(() => [...statusByChallenge.values()].filter((s) => s === "completed").length, [statusByChallenge]);
 
   return (
     <div className="min-h-screen">
@@ -49,6 +56,17 @@ function Catalog() {
           {cats.map((c) => <button key={c} className={chip(cat === c)} onClick={() => setCat(c)}>{c}</button>)}
           <span className="mx-2 w-px bg-border" />
           <button className={chip(detroit)} onClick={() => setDetroit((d) => !d)}>Detroit industries</button>
+          {user && (
+            <>
+              <span className="mx-2 w-px bg-border" />
+              <button className={chip(status === "in_progress")} onClick={() => setStatus(status === "in_progress" ? "All" : "in_progress")}>
+                <PlayCircle className="mr-1 inline h-3 w-3" />In progress ({startedCount})
+              </button>
+              <button className={chip(status === "completed")} onClick={() => setStatus(status === "completed" ? "All" : "completed")}>
+                <CheckCircle2 className="mr-1 inline h-3 w-3" />Completed ({completedCount})
+              </button>
+            </>
+          )}
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {isLoading && Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-44 animate-pulse rounded-lg border bg-card" />)}
@@ -58,6 +76,15 @@ function Catalog() {
                 <span className="text-muted-foreground">{c.category}</span>
                 <span className={diffTone(c.difficulty)}>{c.difficulty}</span>
               </div>
+              {statusByChallenge.get(c.id) && (
+                <div className="mt-2 flex items-center gap-1.5 font-mono text-xs">
+                  {statusByChallenge.get(c.id) === "completed" ? (
+                    <span className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="h-3.5 w-3.5" />Completed</span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-primary"><PlayCircle className="h-3.5 w-3.5" />In progress</span>
+                  )}
+                </div>
+              )}
               <h2 className="mt-3 text-lg font-semibold group-hover:text-primary">{c.title}</h2>
               <p className="mt-2 text-sm text-muted-foreground">{c.summary}</p>
               <div className="mt-4 flex flex-wrap items-center gap-1.5">
