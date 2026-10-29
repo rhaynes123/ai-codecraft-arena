@@ -48,7 +48,7 @@ export function attemptStatusByChallenge(attempts: AttemptStatusRow[] | undefine
   const map = new Map<string, "completed" | "in_progress">();
   for (const a of attempts ?? []) {
     if (a.status === "submitted") map.set(a.challenge_id, "completed");
-    else if (!map.has(a.challenge_id)) map.set(a.challenge_id, "in_progress");
+    else if (a.status === "in_progress" && !map.has(a.challenge_id)) map.set(a.challenge_id, "in_progress");
   }
   return map;
 }
